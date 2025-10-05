@@ -9,6 +9,7 @@ use App\Models\Position;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class EmployeeController extends Controller
 {
@@ -72,7 +73,7 @@ class EmployeeController extends Controller
             'address' => $request->address,
         ]);
 
-        return redirect()->route('hr.employees.index')->with('success', 'Employee created successfully.');
+        return redirect()->route('employees.index')->with('success', 'Employee created successfully.');
     }
 
     /**
@@ -80,7 +81,8 @@ class EmployeeController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $employee = Employee::findOrFail($id);
+        return view('hr.employees.show', compact('employee'));
     }
 
     /**
@@ -88,7 +90,13 @@ class EmployeeController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        // Cari employee berdasarkan ID, jika tidak ketemu akan error 404 (Not Found)
+        $employee = Employee::findOrFail($id);
+
+        $departments = Department::orderBy('name')->get();
+        $positions = Position::orderBy('name')->get();
+
+        return view('hr.employees.edit', compact('employee', 'departments', 'positions'));
     }
 
     /**
@@ -96,14 +104,48 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        // Cari employee yang akan diupdate
+        $employee = Employee::findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($employee->user_id)],
+            'password' => 'nullable|string|min:8',
+            'full_name' => 'required|string|max:255',
+            'date_of_birth' => 'required|date',
+            'gender' => 'required|string',
+            'hire_date' => 'required|date',
+            'department_id' => 'required|exists:departments,id',
+            'position_id' => 'required|exists:positions,id',
+        ]);
+
+        // Update data User
+        $user = $employee->user;
+        $user->name = $request->name;
+        $user->email = $request->email;
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+        $user->save();
+
+        // Update data Employee
+        $employee->update($request->except(['name', 'email', 'password']));
+
+        return redirect()->route('employees.index')->with('success', 'Employee updated successfully.');
     }
+
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
-        //
+        // Cari employee yang akan dihapus
+        $employee = Employee::findOrFail($id);
+
+        // Hapus user terkait, employee akan terhapus otomatis via onDelete('cascade')
+        $employee->user->delete();
+
+        return redirect()->route('employees.index')->with('success', 'Employee deleted successfully.');
     }
 }
