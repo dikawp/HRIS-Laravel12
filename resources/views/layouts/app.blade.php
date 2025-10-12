@@ -8,7 +8,7 @@
 
     <title>@yield('title', config('app.name', 'Laravel'))</title>
 
-    <!-- Fonts -->
+    <link rel="icon" href="{{ asset('icon.png') }}" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
@@ -21,7 +21,6 @@
     <div class="flex h-screen bg-gray-100 dark:bg-gray-900" :class="{ 'overflow-hidden': isSideMenuOpen }">
 
         <!-- Desktop sidebar -->
-        {{-- Pastikan path ini sesuai dengan struktur folder Anda --}}
         @include('layouts.components.sidebar')
 
         <!-- Mobile sidebar backdrop -->
@@ -32,12 +31,7 @@
 
         <!-- Mobile sidebar -->
         <aside class="fixed inset-y-0 z-20 flex-shrink-0 w-64 overflow-y-auto bg-white dark:bg-gray-800 md:hidden"
-            x-show="isSideMenuOpen" x-transition:enter="transition ease-in-out duration-150"
-            x-transition:enter-start="opacity-0 transform -translate-x-20" x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in-out duration-150" x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0 transform -translate-x-20" @click.away="closeSideMenu"
-            @keydown.escape="closeSideMenu">
-            {{-- Menggunakan konten sidebar yang sama dari file terpisah --}}
+            x-show="isSideMenuOpen" @click.away="closeSideMenu" @keydown.escape="closeSideMenu">
             @include('layouts.components.sidebar-content')
         </aside>
 

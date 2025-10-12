@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HR\DashboardController;
+use App\Http\Controllers\HR\DepartmentController;
 use App\Http\Controllers\HR\EmployeeController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,11 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/hr/dashboard', [DashboardController::class, 'index'])->name('hr.dashboard');
 
+    // Departments
+    Route::resource('departments', DepartmentController::class);
+    Route::get('/departments/{department}/positions', [DepartmentController::class, 'getPositions'])->name('departments.positions');
+
+    // Employees
     Route::resource('employees', EmployeeController::class);
 });
 

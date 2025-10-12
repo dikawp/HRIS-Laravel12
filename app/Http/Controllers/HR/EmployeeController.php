@@ -16,10 +16,40 @@ class EmployeeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Ambil data employees bersama relasi department dan position
-        $employees = Employee::with(['department', 'position'])->latest()->paginate(10);
+        $search = $request->query('search');
+
+        $query = Employee::query()
+            ->select('employees.*')
+            ->join('users', function ($join) {
+                $join->on('employees.user_id', '=', 'users.id')
+                    ->where('users.role', '=', 'user');
+            })
+            ->join('departments', 'employees.department_id', '=', 'departments.id')
+            ->join('positions', 'employees.position_id', '=', 'positions.id')
+            ->with(['user', 'department', 'position']);
+
+        // Search filter
+        if ($search) {
+            $query->where(function ($subQuery) use ($search) {
+                $subQuery->where('employees.full_name', 'ILIKE', "%{$search}%")
+                    ->orWhere('users.email', 'ILIKE', "%{$search}%")
+                    ->orWhere('departments.name', 'ILIKE', "%{$search}%")
+                    ->orWhere('positions.name', 'ILIKE', "%{$search}%");
+            });
+        }
+
+        $employees = $query
+            ->orderByDesc('employees.created_at')
+            ->paginate(10)
+            ->withQueryString();
+
+        // AJAX partial render
+        if ($request->ajax()) {
+            return view('hr.employees.employee_table', compact('employees'))->render();
+        }
+
         return view('hr.employees.index', compact('employees'));
     }
 
@@ -38,7 +68,6 @@ class EmployeeController extends Controller
      */
     public function store(Request $request)
     {
-        // 1. Validasi Input
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -51,15 +80,12 @@ class EmployeeController extends Controller
             'position_id' => 'required|exists:positions,id',
         ]);
 
-        // 2. Buat User baru (untuk login)
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'user', // Default role untuk karyawan
+            'role' => 'user',
         ]);
-
-        // 3. Buat Employee baru dan hubungkan dengan User
         Employee::create([
             'user_id' => $user->id,
             'full_name' => $request->full_name,
@@ -90,7 +116,6 @@ class EmployeeController extends Controller
      */
     public function edit(string $id)
     {
-        // Cari employee berdasarkan ID, jika tidak ketemu akan error 404 (Not Found)
         $employee = Employee::findOrFail($id);
 
         $departments = Department::orderBy('name')->get();
@@ -104,7 +129,6 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        // Cari employee yang akan diupdate
         $employee = Employee::findOrFail($id);
 
         $request->validate([
@@ -128,7 +152,6 @@ class EmployeeController extends Controller
         }
         $user->save();
 
-        // Update data Employee
         $employee->update($request->except(['name', 'email', 'password']));
 
         return redirect()->route('employees.index')->with('success', 'Employee updated successfully.');
@@ -140,10 +163,8 @@ class EmployeeController extends Controller
      */
     public function destroy(string $id)
     {
-        // Cari employee yang akan dihapus
         $employee = Employee::findOrFail($id);
 
-        // Hapus user terkait, employee akan terhapus otomatis via onDelete('cascade')
         $employee->user->delete();
 
         return redirect()->route('employees.index')->with('success', 'Employee deleted successfully.');
