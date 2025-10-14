@@ -19,6 +19,8 @@ class EmployeeController extends Controller
     public function index(Request $request)
     {
         $search = $request->query('search');
+        $departmentId = $request->query('department_id');
+        $positionId = $request->query('position_id');
 
         $query = Employee::query()
             ->select('employees.*')
@@ -40,17 +42,29 @@ class EmployeeController extends Controller
             });
         }
 
+        // Department
+        $query->when($departmentId, function ($q, $deptId) {
+            $q->where('employees.department_id', $deptId);
+        });
+
+        // Position
+        $query->when($positionId, function ($q, $posId) {
+            $q->where('employees.position_id', $posId);
+        });
+
         $employees = $query
             ->orderByDesc('employees.created_at')
             ->paginate(10)
             ->withQueryString();
+
+        $departments = $request->ajax() ? [] : Department::orderBy('name')->get();
 
         // AJAX partial render
         if ($request->ajax()) {
             return view('hr.employees.employee_table', compact('employees'))->render();
         }
 
-        return view('hr.employees.index', compact('employees'));
+        return view('hr.employees.index', compact('employees', 'departments'));
     }
 
     /**

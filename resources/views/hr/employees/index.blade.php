@@ -18,36 +18,38 @@
             </a>
         </div>
 
-        {{-- Form Pencarian Live --}}
+        {{-- Form Pencarian  --}}
         <div class="mb-4 grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-            {{-- Filter 1: Search Input --}}
+            {{-- Search Input --}}
             <div class="md:col-span-3">
                 <label for="searchInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
                 <input type="text" id="searchInput" placeholder="Search by name or email..."
-                    class="mt-1 w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="mt-1 w-full px-4 py-2 border rounded-lg dark:text-gray-300 dark:bg-gray-800 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value="{{ request('search') }}">
             </div>
 
+            {{-- Department --}}
             <div>
                 <label for="departmentFilter"
                     class="block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
                 <select id="departmentFilter"
-                    class="mt-1 w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    class="mt-1 w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-gray-300">
                     <option value="">All Departments</option>
-                    {{-- @foreach ($departments as $department)
+                    @foreach ($departments as $department)
                         <option value="{{ $department->id }}"
                             {{ request('department_id') == $department->id ? 'selected' : '' }}>
                             {{ $department->name }}
                         </option>
-                    @endforeach --}}
+                    @endforeach
                 </select>
             </div>
 
+            {{-- Position --}}
             <div>
                 <label for="positionFilter"
                     class="block text-sm font-medium text-gray-700 dark:text-gray-300">Position</label>
                 <select id="positionFilter" disabled
-                    class="mt-1 w-full px-4 py-2 border rounded-lg disabled:bg-gray-200 dark:disabled:bg-gray-700 dark:bg-gray-800 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    class="mt-1 w-full px-4 py-2 border rounded-lg dark:text-gray-300 disabled:bg-gray-200 dark:disabled:bg-gray-700 dark:bg-gray-800 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">Select Department First</option>
                 </select>
             </div>
@@ -64,6 +66,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('searchInput');
+            const departmentFilter = document.getElementById('departmentFilter');
+            const positionFilter = document.getElementById('positionFilter');
             const container = document.getElementById('employeeDataContainer');
 
             function debounce(func, delay) {
@@ -74,57 +78,80 @@
                 };
             }
 
-            const fetchEmployees = async (url) => {
+            function buildUrlAndFetch() {
+                const url = new URL('{{ route('employees.index') }}');
+                url.searchParams.set('search', searchInput.value);
+                url.searchParams.set('department_id', departmentFilter.value);
+                url.searchParams.set('position_id', positionFilter.value);
+                url.searchParams.set('page', 1);
+                fetchData(url.toString());
+            }
+
+            const fetchData = async (url) => {
                 try {
                     const response = await fetch(url, {
-                        method: 'GET',
                         headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                        },
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
                     });
-                    const html = await response.text();
-                    container.innerHTML = html;
+                    container.innerHTML = await response.text();
                 } catch (error) {
                     console.error('Error fetching data:', error);
-                    container.innerHTML =
-                        '<p class="text-center text-red-500 p-4">Failed to load data.</p>';
                 }
             };
 
-            searchInput.addEventListener('input', debounce((e) => {
-                const query = e.target.value;
-                const url = new URL('{{ route('employees.index') }}');
-                url.searchParams.set('search', query);
-                url.searchParams.set('page', 1);
+            const updatePositionFilter = async () => {
+                const departmentId = departmentFilter.value;
+                positionFilter.innerHTML = '<option value="">Loading...</option>';
+                positionFilter.disabled = true;
 
-                fetchEmployees(url.toString());
-            }, 400));
+                if (!departmentId) {
+                    positionFilter.innerHTML = '<option value="">Select Department First</option>';
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/departments/${departmentId}/positions`);
+                    const positions = await response.json();
+
+                    positionFilter.innerHTML = '<option value="">All Positions</option>';
+                    positions.forEach(position => {
+                        const option = document.createElement('option');
+                        option.value = position.id;
+                        option.textContent = position.name;
+                        positionFilter.appendChild(option);
+                    });
+                    positionFilter.disabled = false;
+                } catch (error) {
+                    console.error('Error fetching positions:', error);
+                    positionFilter.innerHTML = '<option value="">Failed to load</option>';
+                }
+            };
+
+            searchInput.addEventListener('input', debounce(buildUrlAndFetch, 400));
+
+            departmentFilter.addEventListener('change', async function() {
+                await updatePositionFilter();
+                buildUrlAndFetch();
+            });
+
+            positionFilter.addEventListener('change', buildUrlAndFetch);
 
             document.body.addEventListener('click', function(e) {
                 if (e.target.matches('#employeeDataContainer .pagination a')) {
                     e.preventDefault();
-                    const url = e.target.getAttribute('href');
-                    if (url) {
-                        fetchEmployees(url);
-                    }
+                    fetchData(e.target.getAttribute('href'));
                 }
             });
 
-            document.body.addEventListener('click', function(e) {
-                const toggleButton = e.target.closest('.details-toggle');
-                if (toggleButton) {
-                    const targetId = toggleButton.dataset.target;
-                    const detailsRow = document.querySelector(targetId);
-                    const expandIcon = toggleButton.querySelector('.expand-icon');
-                    const collapseIcon = toggleButton.querySelector('.collapse-icon');
-
-                    if (detailsRow) {
-                        detailsRow.classList.toggle('hidden');
-                        expandIcon.classList.toggle('hidden');
-                        collapseIcon.classList.toggle('hidden');
+            if (departmentFilter.value) {
+                updatePositionFilter().then(() => {
+                    const selectedPosition = '{{ request('position_id') }}';
+                    if (selectedPosition) {
+                        positionFilter.value = selectedPosition;
                     }
-                }
-            });
+                });
+            }
         });
     </script>
 @endpush
