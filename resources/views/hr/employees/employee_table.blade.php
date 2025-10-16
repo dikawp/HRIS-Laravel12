@@ -39,7 +39,7 @@
                         </div>
                     </td>
                 </tr>
-                
+
                 {{-- Baris detail (collapsible) --}}
                 <tr id="details-{{ $employee->id }}" class="hidden border-b dark:border-gray-700 lg:hidden">
                     <td colspan="3" class="p-4 bg-gray-50 dark:bg-gray-800/50">

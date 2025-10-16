@@ -1,6 +1,6 @@
 <nav class="py-4 text-gray-500 dark:text-gray-400">
     {{-- Logo --}}
-    <a href="{{ route('dashboard') }}" class="ml-6 text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center">
+    <a href="" class="ml-6 text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center">
         <svg class="w-8 h-8 me-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
                 d="M4 4h4v4H4zM4 10h4v4H4zM4 16h4v4H4zM10 4h4v4h-4zM10 10h4v4h-4zM10 16h4v4h-4zM16 4h4v4h-4zM16 10h4v4h-4zM16 16h4v4h-4z" />
@@ -8,7 +8,7 @@
         <span>HRIS GABUT</span>
     </a>
 
-    <ul class="mt-4 ms-1">
+    <ul class="mt-4 ms-1 space-y-1">
         {{-- Dashboard --}}
         <li class="relative px-6 py-3">
             <a href="{{ auth()->user()->role === 'admin' ? route('hr.dashboard') : route('dashboard') }}"
@@ -17,9 +17,13 @@
                     'text-blue-600 dark:text-blue-300' => request()->routeIs(
                         auth()->user()->role === 'admin' ? 'hr.dashboard' : 'dashboard'),
                 ])>
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 6h4v4H4zM14 6h4v4h-4zM4 16h4v4H4zM14 16h4v4h-4zM10 6h4v4h-4zM10 16h4v4h-4z" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-layout-dashboard-icon lucide-layout-dashboard">
+                    <rect width="7" height="9" x="3" y="3" rx="1" />
+                    <rect width="7" height="5" x="14" y="3" rx="1" />
+                    <rect width="7" height="9" x="14" y="12" rx="1" />
+                    <rect width="7" height="5" x="3" y="16" rx="1" />
                 </svg>
                 <span class="ml-4">Dashboard</span>
             </a>
@@ -28,12 +32,13 @@
         {{-- Admin Menu --}}
         @if (auth()->user()->role === 'admin')
             @php
-                $isHrMenuActive = request()->routeIs('employees.*', 'departments.*');
+                $isHrMenuActive = request()->routeIs('employees.*', 'departments.*', 'holidays.*', 'attendances.*', 'leaves.*');
                 $isAttendanceMenuActive = request()->routeIs('attendances.*');
+                $isLeavesMenuActive = request()->routeIs('leaves.*');
             @endphp
 
             {{-- HR Management --}}
-            <li class="relative px-6 py-3" x-data="{ isOpen: {{ $isHrMenuActive ? 'true' : 'false' }} }">
+            <li class="relative px-6 py-3" x-data="{ isOpen: {{ $isHrMenuActive ? 'true' : 'false' }} }" x-init="if ({{ $isHrMenuActive ? 'true' : 'false' }}) isOpen = true">
                 <button @click="isOpen = !isOpen" @class([
                     'inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
                     'text-blue-600 dark:text-blue-300' => $isHrMenuActive,
@@ -44,12 +49,7 @@
                             <path d="M10 15H6a4 4 0 0 0-4 4v2" />
                             <circle cx="9" cy="7" r="4" />
                             <circle cx="18" cy="15" r="3" />
-                            <path d="m19.5 12.5.5-1" />
-                            <path d="m19.5 17.5.5 1" />
-                            <path d="m21 15h1" />
-                            <path d="m15 15h1" />
-                            <path d="m16.5 12.5-.5-1" />
-                            <path d="m16.5 17.5-.5 1" />
+                            <path d="m19.5 12.5.5-1m-3.5 6 .5 1m2 0h1m-7-6h1m.5-2.5-.5-1m.5 6.5-.5 1" />
                         </svg>
                         <span class="ml-4">HR Management</span>
                     </span>
@@ -61,59 +61,134 @@
                     </svg>
                 </button>
 
-                <ul x-show="isOpen" x-collapse class="p-2 ms-5 space-y-2 text-sm font-medium text-gray-500 rounded-md">
-                    @foreach ([['route' => 'departments.index', 'label' => 'Departments'], ['route' => 'employees.index', 'label' => 'Employee Lists']] as $item)
+                {{-- Submenu HR Management --}}
+                <ul x-show="isOpen" x-collapse class="mt-2 space-y-2 text-sm font-medium text-gray-500 rounded-md">
+                    @foreach ([['route' => 'departments.index', 'label' => 'Departments'], ['route' => 'employees.index', 'label' => 'Employee Lists'], ['route' => 'holidays.index', 'label' => 'Holidays']] as $item)
                         <li>
                             <a href="{{ route($item['route']) }}" @class([
-                                'block px-3 py-2 rounded-md transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
+                                'flex items-center gap-2 py-2 rounded-md transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
                                 'text-blue-600 bg-blue-100 dark:text-blue-200 dark:bg-blue-900' => request()->routeIs(
                                     Str::before($item['route'], '.') . '.*'),
                             ])>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round"
+                                    class="lucide lucide-dot-icon lucide-dot">
+                                    <circle cx="12.1" cy="12.1" r="1" />
+                                </svg>
                                 {{ $item['label'] }}
                             </a>
                         </li>
                     @endforeach
+
+                    {{-- Attendance Nested Dropdown --}}
+                    <li class="py-1" x-data="{ isOpen: {{ $isAttendanceMenuActive ? 'true' : 'false' }} }" x-init="if ({{ $isAttendanceMenuActive ? 'true' : 'false' }}) isOpen = true">
+                        <button @click="isOpen = !isOpen" @class([
+                            'inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
+                            'text-blue-600 dark:text-blue-300' => $isAttendanceMenuActive,
+                        ])>
+                            <span class="inline-flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round"
+                                    class="lucide lucide-dot-icon lucide-dot">
+                                    <circle cx="12.1" cy="12.1" r="1" />
+                                </svg>
+                                Attendance
+                            </span>
+                            <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': isOpen }"
+                                fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M5.3 7.3a1 1 0 011.4 0L10 10.6l3.3-3.3a1 1 0 111.4 1.4l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 010-1.4z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+
+                        {{-- Attendance submenu --}}
+                        <ul x-show="isOpen" x-collapse class="ms-5 space-y-2">
+                            @foreach ([['route' => 'attendances.monitor', 'label' => 'Monitoring'], ['route' => 'attendances.index', 'label' => 'Attendance (HR)']] as $item)
+                                <li>
+                                    <a href="{{ route($item['route']) }}" @class([
+                                        'flex items-center gap-2 px-3 py-2 rounded-md transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
+                                        'text-blue-600 bg-blue-100 dark:text-blue-200 dark:bg-blue-900' => request()->routeIs(
+                                            $item['route']),
+                                    ])>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-dot-icon lucide-dot">
+                                            <circle cx="12.1" cy="12.1" r="1" />
+                                        </svg>
+                                        {{ $item['label'] }}
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </li>
+
+                    {{-- Leaves --}}
+                    <li class="py-1" x-data="{ isOpen: {{ $isLeavesMenuActive ? 'true' : 'false' }} }" x-init="if ({{ $isLeavesMenuActive ? 'true' : 'false' }}) isOpen = true">
+                        <button @click="isOpen = !isOpen" @class([
+                            'inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
+                            'text-blue-600 dark:text-blue-300' => $isLeavesMenuActive,
+                        ])>
+                            <span class="inline-flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round"
+                                    class="lucide lucide-dot-icon lucide-dot">
+                                    <circle cx="12.1" cy="12.1" r="1" />
+                                </svg>
+                                Leaves
+                            </span>
+                            <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': isOpen }"
+                                fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M5.3 7.3a1 1 0 011.4 0L10 10.6l3.3-3.3a1 1 0 111.4 1.4l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 010-1.4z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+
+                        {{-- Leaves submenu --}}
+                        <ul x-show="isOpen" x-collapse class="ms-5 space-y-2">
+                            @foreach ([['route' => 'leaves.index', 'label' => 'Leaves']] as $item)
+                                <li>
+                                    <a href="{{ route($item['route']) }}" @class([
+                                        'flex items-center gap-2 px-3 py-2 rounded-md transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
+                                        'text-blue-600 bg-blue-100 dark:text-blue-200 dark:bg-blue-900' => request()->routeIs(
+                                            $item['route']),
+                                    ])>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-dot-icon lucide-dot">
+                                            <circle cx="12.1" cy="12.1" r="1" />
+                                        </svg>
+                                        {{ $item['label'] }}
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </li>
                 </ul>
             </li>
+        @endif
 
-            {{-- Attendance --}}
-            <li class="relative px-6 py-3" x-data="{ isOpen: {{ $isAttendanceMenuActive ? 'true' : 'false' }} }">
-                <button @click="isOpen = !isOpen" @class([
-                    'inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
-                    'text-blue-600 dark:text-blue-300' => $isAttendanceMenuActive,
+        {{-- User Menu --}}
+        @if (auth()->user()->role === 'user')
+            <li class="relative px-6 py-3">
+                <a href="{{ route('my.attendance.index') }}" @class([
+                    'inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
+                    'text-blue-600 dark:text-blue-300' => request()->routeIs('my.attendance.*'),
                 ])>
-                    <span class="inline-flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                            <path d="M13 5h8" />
-                            <path d="M13 12h8" />
-                            <path d="M13 19h8" />
-                            <path d="m3 17 2 2 4-4" />
-                            <path d="m3 7 2 2 4-4" />
-                        </svg>
-                        <span class="ml-4">Attendance</span>
-                    </span>
-                    <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': isOpen }"
-                        fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd"
-                            d="M5.3 7.3a1 1 0 011.4 0L10 10.6l3.3-3.3a1 1 0 111.4 1.4l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 010-1.4z"
-                            clip-rule="evenodd" />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" class="lucide lucide-square-check-big-icon lucide-square-check-big">
+                        <path d="M21 10.656V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.344" />
+                        <path d="m9 11 3 3L22 4" />
                     </svg>
-                </button>
-
-                <ul x-show="isOpen" x-collapse class="p-2 ms-5 space-y-2 text-sm font-medium text-gray-500 rounded-md">
-                    @foreach ([['route' => 'employees.index', 'label' => 'Attendance (HR)'], ['route' => 'attendances.index', 'label' => 'Monitoring']] as $item)
-                        <li>
-                            <a href="{{ route($item['route']) }}" @class([
-                                'block px-3 py-2 rounded-md transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
-                                'text-blue-600 bg-blue-100 dark:text-blue-200 dark:bg-blue-900' => request()->routeIs(
-                                    $item['route']),
-                            ])>
-                                {{ $item['label'] }}
-                            </a>
-                        </li>
-                    @endforeach
-                </ul>
+                    <span class="ml-4">My Attendance</span>
+                </a>
             </li>
         @endif
     </ul>

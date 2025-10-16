@@ -2,7 +2,7 @@
 @section('title', 'Employee Lists')
 
 @section('content')
-    <div class="min-h-screen py-6 px-4 sm:px-6">
+    <div class="min-h-screen py-6">
         <div class="mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
                 Employee List
@@ -152,6 +152,24 @@
                     }
                 });
             }
+
+            container.addEventListener('click', function(e) {
+                const toggleButton = e.target.closest('.details-toggle');
+
+                if (!toggleButton) return;
+
+
+                const targetId = toggleButton.dataset.target;
+                const detailsRow = document.querySelector(targetId);
+
+                if (detailsRow) {
+                    detailsRow.classList.toggle('hidden');
+
+                    toggleButton.querySelector('.expand-icon').classList.toggle('hidden');
+                    toggleButton.querySelector('.collapse-icon').classList.toggle('hidden');
+                }
+            });
+
         });
     </script>
 @endpush

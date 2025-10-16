@@ -2,7 +2,7 @@
 @section('title', 'Department Lists')
 
 @section('content')
-    <div class="min-h-screen px-4 sm:px-6 py-6">
+    <div class="min-h-screen py-6">
         <div class="mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
                 Departments
@@ -64,9 +64,7 @@
                 fetchData(url.toString());
             }, 400));
 
-            // GABUNGKAN SEMUA EVENT LISTENER CLICK KE SATU FUNGSI
             document.body.addEventListener('click', function(e) {
-                // Logika untuk Pagination
                 if (e.target.matches('#departmentDataContainer .pagination a')) {
                     e.preventDefault();
                     const url = e.target.getAttribute('href');
@@ -75,7 +73,6 @@
                     }
                 }
 
-                // BARU: Logika untuk Expand/Collapse
                 const toggleButton = e.target.closest('.details-toggle');
                 if (toggleButton) {
                     const targetId = toggleButton.dataset.target;
