@@ -33,7 +33,6 @@ class EmployeeSeeder extends Seeder
                 'password' => Hash::make('password'),
             ]);
 
-            // Buat employee terkait user
             Employee::create([
                 'user_id'        => $user->id,
                 'nik'            => strtoupper(substr($department->name, 0, 2)) . str_pad($i, 3, '0', STR_PAD_LEFT),

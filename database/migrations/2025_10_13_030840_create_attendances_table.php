@@ -17,7 +17,7 @@ return new class extends Migration
             $table->date('date');
             $table->time('check_in')->nullable();
             $table->time('check_out')->nullable();
-            $table->string('status'); // e.g., Hadir, Sakit, Izin, Cuti, Alpa
+            $table->string('status'); 
             $table->text('notes')->nullable();
             $table->timestamps();
 

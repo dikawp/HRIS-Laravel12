@@ -5,15 +5,22 @@ namespace App\Http\Controllers\HR;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Employee;
+use App\Models\Holiday;
 use Illuminate\Http\Request;
 
 class AttendanceMonitorController extends Controller
 {
-    public function Index(Request $request)
+    public function index(Request $request)
     {
         $month = $request->input('month', date('m'));
         $year = $request->input('year', date('Y'));
         $today = today();
+
+        $holidaysInMonth = Holiday::whereYear('date', $year)
+            ->whereMonth('date', $month)
+            ->pluck('date')
+            ->map(fn($date) => $date->format('Y-m-d'))
+            ->toArray();
 
         $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
         $dates = [];
@@ -23,13 +30,15 @@ class AttendanceMonitorController extends Controller
             $currentDate = \Carbon\Carbon::createFromDate($year, $month, $day);
             $isSunday = $currentDate->isSunday();
 
+            $isHoliday = in_array($currentDate->toDateString(), $holidaysInMonth);
+
             $dates[] = [
                 'day' => $day,
                 'date_full' => $currentDate,
                 'is_sunday' => $isSunday,
             ];
 
-            if (!$isSunday) {
+            if (!$isSunday && !$isHoliday) {
                 $workingDays++;
             }
         }
@@ -50,7 +59,8 @@ class AttendanceMonitorController extends Controller
             'totalEmployees',
             'presentToday',
             'absentToday',
-            'workingDays'
+            'workingDays',
+            'holidaysInMonth'
         ));
     }
 }

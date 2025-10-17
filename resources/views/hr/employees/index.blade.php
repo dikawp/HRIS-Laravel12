@@ -18,9 +18,8 @@
             </a>
         </div>
 
-        {{-- Form Pencarian  --}}
+        {{-- Form Search  --}}
         <div class="mb-4 grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-            {{-- Search Input --}}
             <div class="md:col-span-3">
                 <label for="searchInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
                 <input type="text" id="searchInput" placeholder="Search by name or email..."

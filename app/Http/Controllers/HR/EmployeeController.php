@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 
 class EmployeeController extends Controller
 {
@@ -59,7 +60,6 @@ class EmployeeController extends Controller
 
         $departments = $request->ajax() ? [] : Department::orderBy('name')->get();
 
-        // AJAX partial render
         if ($request->ajax()) {
             return view('hr.employees.employee_table', compact('employees'))->render();
         }
@@ -82,35 +82,50 @@ class EmployeeController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8',
             'full_name' => 'required|string|max:255',
+            'nik' => 'nullable|string|max:50|unique:employees,nik',
+            'phone_number' => 'nullable|string|max:20|unique:employees,phone_number',
+            'place_of_birth' => 'nullable|string|max:255',
             'date_of_birth' => 'required|date',
-            'gender' => 'required|string',
+            'gender' => 'required|in:Male,Female',
+            'marital_status' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
             'hire_date' => 'required|date',
             'department_id' => 'required|exists:departments,id',
             'position_id' => 'required|exists:positions,id',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'password' => Hash::make($validatedData['password']),
             'role' => 'user',
         ]);
+
+        $photoPath = null;
+        if ($request->hasFile('photo')) {
+            $photoPath = $request->file('photo')->store('photos', 'public');
+        }
+
         Employee::create([
             'user_id' => $user->id,
-            'full_name' => $request->full_name,
-            'date_of_birth' => $request->date_of_birth,
-            'gender' => $request->gender,
-            'hire_date' => $request->hire_date,
-            'department_id' => $request->department_id,
-            'position_id' => $request->position_id,
-            'nik' => $request->nik,
-            'phone_number' => $request->phone_number,
-            'address' => $request->address,
+            'full_name' => $validatedData['full_name'],
+            'nik' => $validatedData['nik'],
+            'phone_number' => $validatedData['phone_number'],
+            'place_of_birth' => $validatedData['place_of_birth'],
+            'date_of_birth' => $validatedData['date_of_birth'],
+            'gender' => $validatedData['gender'],
+            'marital_status' => $validatedData['marital_status'],
+            'address' => $validatedData['address'],
+            'hire_date' => $validatedData['hire_date'],
+            'department_id' => $validatedData['department_id'],
+            'position_id' => $validatedData['position_id'],
+            'photo' => $photoPath,
         ]);
 
         return redirect()->route('employees.index')->with('success', 'Employee created successfully.');
@@ -145,32 +160,46 @@ class EmployeeController extends Controller
     {
         $employee = Employee::findOrFail($id);
 
-        $request->validate([
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($employee->user_id)],
             'password' => 'nullable|string|min:8',
+
             'full_name' => 'required|string|max:255',
+            'nik' => ['nullable', 'string', 'max:50', Rule::unique('employees')->ignore($employee->id)],
+            'phone_number' => ['nullable', 'string', 'max:20', Rule::unique('employees')->ignore($employee->id)],
+            'place_of_birth' => 'nullable|string|max:255',
             'date_of_birth' => 'required|date',
-            'gender' => 'required|string',
+            'gender' => 'required|in:Male,Female',
+            'marital_status' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
             'hire_date' => 'required|date',
             'department_id' => 'required|exists:departments,id',
             'position_id' => 'required|exists:positions,id',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        // Update data User
         $user = $employee->user;
-        $user->name = $request->name;
-        $user->email = $request->email;
+        $user->name = $validatedData['name'];
+        $user->email = $validatedData['email'];
         if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
+            $user->password = Hash::make($validatedData['password']);
         }
         $user->save();
 
-        $employee->update($request->except(['name', 'email', 'password']));
+        $employeeData = $request->except(['_token', '_method', 'name', 'email', 'password', 'photo']);
+
+        if ($request->hasFile('photo')) {
+            if ($employee->photo) {
+                Storage::disk('public')->delete($employee->photo);
+            }
+            $employeeData['photo'] = $request->file('photo')->store('photos', 'public');
+        }
+
+        $employee->update($employeeData);
 
         return redirect()->route('employees.index')->with('success', 'Employee updated successfully.');
     }
-
 
     /**
      * Remove the specified resource from storage.

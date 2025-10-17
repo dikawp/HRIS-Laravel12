@@ -32,12 +32,11 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Menampilkan form untuk menambah absensi manual.
+     * Menampilkan form untuk menambah absensi
      */
     public function create(Request $request)
     {
         $employees = Employee::orderBy('full_name')->get();
-        // Ambil employee_id dari request untuk pre-select dropdown
         $selectedEmployeeId = $request->input('employee_id');
         return view('hr.attendances.create', compact('employees', 'selectedEmployeeId'));
     }

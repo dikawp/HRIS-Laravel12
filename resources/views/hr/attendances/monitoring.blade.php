@@ -54,7 +54,6 @@
             </div>
             <div class="flex items-center p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
                 <div class="p-3 mr-4 text-orange-500 bg-orange-100 rounded-full dark:text-orange-100 dark:bg-orange-500">
-                    {{-- Icon for Working Days --}}
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path>
                         <path
@@ -76,18 +75,18 @@
                         <tr
                             class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800">
                             <th class="px-4 py-3 sticky left-0 bg-gray-50 dark:bg-gray-800">Employee Name</th>
-
-                            {{-- Gunakan perulangan dari array $dates --}}
                             @foreach ($dates as $dateInfo)
+                                @php
+                                    $isHoliday = in_array($dateInfo['date_full']->toDateString(), $holidaysInMonth);
+                                @endphp
                                 <th @class([
                                     'px-2 py-3 text-center',
                                     'bg-red-200 dark:bg-red-800 text-red-700 dark:text-red-200' =>
-                                        $dateInfo['is_sunday'],
+                                        $dateInfo['is_sunday'] || $isHoliday,
                                 ])>
                                     {{ str_pad($dateInfo['day'], 2, '0', STR_PAD_LEFT) }}
                                 </th>
                             @endforeach
-
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800">
@@ -95,19 +94,17 @@
                             <tr class="text-gray-700 dark:text-gray-400">
                                 <td class="px-4 py-3 text-sm font-semibold sticky left-0 bg-white dark:bg-gray-800">
                                     {{ $employee->full_name }}</td>
-
-                                {{-- Gunakan perulangan dari array $dates --}}
                                 @foreach ($dates as $dateInfo)
                                     @php
-                                        // Pencarian sekarang lebih sederhana
                                         $attendance = $employee->attendances->firstWhere(
                                             'date',
                                             $dateInfo['date_full']->toDateString(),
                                         );
+                                        $isHoliday = in_array($dateInfo['date_full']->toDateString(), $holidaysInMonth);
                                     @endphp
                                     <td @class([
                                         'px-2 py-3 text-sm text-center',
-                                        'bg-red-100 dark:bg-red-900/50' => $dateInfo['is_sunday'],
+                                        'bg-red-100 dark:bg-red-900/50' => $dateInfo['is_sunday'] || $isHoliday,
                                     ])>
                                         @if ($attendance)
                                             @if ($attendance->status == 'Hadir')

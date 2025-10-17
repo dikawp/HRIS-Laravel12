@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\HR;
 
 use App\Http\Controllers\Controller;
+use App\Models\Holiday;
 use Illuminate\Http\Request;
 
 class HolidayController extends Controller
@@ -12,7 +13,8 @@ class HolidayController extends Controller
      */
     public function index()
     {
-        return view('hr.holidays.index');
+        $holidays = Holiday::latest('date')->paginate(10);
+        return view('hr.holidays.index', compact('holidays'));
     }
 
     /**
@@ -28,7 +30,14 @@ class HolidayController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'description' => 'required|string|max:255',
+            'date' => 'required|date|unique:holidays,date',
+        ]);
+
+        Holiday::create($request->all());
+
+        return redirect()->route('holidays.index')->with('success', 'Holiday added successfully.');
     }
 
     /**
@@ -58,8 +67,9 @@ class HolidayController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Holiday $holiday)
     {
-        //
+        $holiday->delete();
+        return redirect()->route('holidays.index')->with('success', 'Holiday deleted successfully.');
     }
 }

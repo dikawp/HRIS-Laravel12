@@ -131,7 +131,6 @@ class DepartmentController extends Controller
             $existingPositionIds = $department->positions()->pluck('id')->toArray();
             $incomingPositionIds = [];
 
-            // <- perbaikan penting di sini
             foreach ($validated['positions'] ?? [] as $positionData) {
                 $position = $department->positions()->updateOrCreate(
                     ['id' => $positionData['id'] ?? null],
