@@ -11,10 +11,32 @@ class HolidayController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $holidays = Holiday::latest('date')->paginate(10);
-        return view('hr.holidays.index', compact('holidays'));
+        $availableYears = Holiday::selectRaw('EXTRACT(YEAR FROM date) as year') // <-- INI YANG BENAR
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year');
+
+        $selectedYear = $request->input('year', date('Y'));
+
+        $query = Holiday::query();
+
+        if ($selectedYear && $selectedYear !== 'all') {
+            $query->whereYear('date', $selectedYear);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('description', 'like', '%' . $request->input('search') . '%');
+        }
+
+        $holidays = $query->orderBy('date', 'asc')->get();
+
+        $holidaysByMonth = $holidays->groupBy(function ($holiday) {
+            return \Carbon\Carbon::parse($holiday->date)->format('F Y');
+        });
+
+        return view('hr.holidays.index', compact('holidaysByMonth', 'availableYears', 'selectedYear'));
     }
 
     /**

@@ -74,45 +74,113 @@
 
             <!-- Employee Profile Card -->
             @if ($selectedEmployee)
-                <div class="lg:col-span-4 xl:col-span-3">
-                    <div class="px-4 py-5 bg-white rounded-lg shadow-md dark:bg-gray-800">
-                        <div class="flex justify-center mb-4">
-                            <img class="object-cover w-24 h-24 rounded-full border-2 border-blue-500"
-                                src="https://ui-avatars.com/api/?name={{ urlencode($selectedEmployee->full_name) }}&background=8F5CF6&color=fff&bold=true"
-                                alt="Employee Photo">
+                <div class="lg:col-span-4">
+                    {{-- Employee Profile Card --}}
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden">
+                        <div class="p-6">
+                            {{-- Header: Avatar, Name, Position --}}
+                            <div class="flex items-center space-x-5">
+                                <div class="relative flex-shrink-0">
+                                    @if ($selectedEmployee->photo)
+                                        <img class="w-20 h-20 rounded-full object-cover"
+                                            src="{{ asset('storage/' . $selectedEmployee->photo) }}"
+                                            alt="{{ $selectedEmployee->full_name }}">
+                                    @else
+                                        <div
+                                            class="relative w-20 h-20 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600">
+                                            <svg class="absolute w-24 h-24 text-gray-400 -left-2" fill="currentColor"
+                                                viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                    d="M10 9a3 3 0 100-6 3 3 0 000   6zm-7 9a7 7 0 1114 0H3z"
+                                                    clip-rule="evenodd"></path>
+                                            </svg>
+                                        </div>
+                                    @endif
+                                    {{-- Status Badge --}}
+                                    <span
+                                        class="absolute bottom-0 right-0 block h-4 w-4 rounded-full bg-green-400 ring-2 ring-white dark:ring-gray-800"
+                                        title="Active"></span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-lg font-bold text-gray-800 dark:text-gray-100 truncate">
+                                        {{ $selectedEmployee->full_name }}
+                                    </p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        {{ $selectedEmployee->position->name }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <hr class="my-5 border-gray-200 dark:border-gray-700">
+
+                            {{-- Details Section --}}
+                            <div class="space-y-4">
+                                {{-- Employment Details --}}
+                                <div>
+                                    <h4 class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-2">
+                                        Employment Details</h4>
+                                    <dl class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                                        <div class="flex justify-between">
+                                            <dt class="font-medium text-gray-600 dark:text-gray-400">Employee ID</dt>
+                                            <dd>{{ $selectedEmployee->nik ?? 'N/A' }}</dd>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <dt class="font-medium text-gray-600 dark:text-gray-400">Joining Date</dt>
+                                            <dd>{{ \Carbon\Carbon::parse($selectedEmployee->hire_date)->format('d M Y') }}
+                                            </dd>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <dt class="font-medium text-gray-600 dark:text-gray-400">Department</dt>
+                                            <dd>{{ $selectedEmployee->department->name ?? 'N/A' }}</dd>
+                                        </div>
+                                    </dl>
+                                </div>
+                                {{-- Contact Information --}}
+                                <div>
+                                    <h4 class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-2">
+                                        Contact</h4>
+                                    <dl class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                                        <div class="flex items-center">
+                                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                                                </path>
+                                            </svg>
+                                            <a href="mailto:{{ $selectedEmployee->user->email }}"
+                                                class="hover:underline">{{ $selectedEmployee->user->email }}</a>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z">
+                                                </path>
+                                            </svg>
+                                            <span>{{ $selectedEmployee->phone_number ?? 'N/A' }}</span>
+                                        </div>
+                                    </dl>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="text-center">
-                            <p class="font-bold text-lg text-gray-800 dark:text-gray-200">
-                                {{ $selectedEmployee->full_name }}
-                            </p>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
-                                {{ $selectedEmployee->position->name }}
-                            </p>
-                        </div>
-
-                        <hr class="my-4 border-gray-200 dark:border-gray-700">
-
-                        <div class="space-y-3 text-sm text-gray-700 dark:text-gray-300">
-                            <div class="flex justify-between">
-                                <span class="font-semibold">Employee ID:</span>
-                                <span>{{ $selectedEmployee->nik ?? '-' }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="font-semibold">Joining Date:</span>
-                                <span>{{ \Carbon\Carbon::parse($selectedEmployee->hire_date)->format('d M Y') }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="font-semibold">Department:</span>
-                                <span>{{ $selectedEmployee->department->name ?? '-' }}</span>
-                            </div>
+                        {{-- Footer Actions --}}
+                        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t dark:border-gray-700 flex gap-3">
+                            <a href="{{ route('employees.show', $selectedEmployee->id) }}"
+                                class="flex-1 text-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150">
+                                View Profile
+                            </a>
+                            <a href="{{ route('employees.edit', $selectedEmployee->id) }}"
+                                class="flex-1 text-center px-4 py-2 text-sm font-medium text-gray-700 bg-white dark:text-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition duration-150">
+                                Edit
+                            </a>
                         </div>
                     </div>
                 </div>
             @endif
 
             <!-- Attendance History Table -->
-            <div class="{{ $selectedEmployee ? 'lg:col-span-8 xl:col-span-9' : 'col-span-full' }}">
+            <div class="{{ $selectedEmployee ? 'lg:col-span-8' : 'col-span-full' }}">
                 @if ($selectedEmployee)
                     <div class="w-full overflow-hidden rounded-lg shadow-xs">
                         <div class="w-full overflow-x-auto">
