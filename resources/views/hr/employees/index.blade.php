@@ -156,8 +156,6 @@
                 const toggleButton = e.target.closest('.details-toggle');
 
                 if (!toggleButton) return;
-
-
                 const targetId = toggleButton.dataset.target;
                 const detailsRow = document.querySelector(targetId);
 
@@ -168,7 +166,6 @@
                     toggleButton.querySelector('.collapse-icon').classList.toggle('hidden');
                 }
             });
-
         });
     </script>
 @endpush

@@ -9,6 +9,7 @@ use App\Http\Controllers\HR\HolidayController;
 use App\Http\Controllers\HR\LeaveController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserAttendanceController;
+use App\Http\Controllers\UserLeaveController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -26,6 +27,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-attendance', [UserAttendanceController::class, 'index'])->name('my.attendance.index');
     Route::post('/my-attendance/check-in', [UserAttendanceController::class, 'checkIn'])->name('my.attendance.checkin');
     Route::post('/my-attendance/check-out', [UserAttendanceController::class, 'checkOut'])->name('my.attendance.checkout');
+
+    // User Leaves
+    Route::resource('my-leaves', UserLeaveController::class);
 });
 
 Route::get('/dashboard', function () {

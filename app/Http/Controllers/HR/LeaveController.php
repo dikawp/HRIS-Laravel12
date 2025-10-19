@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\HR;
 
 use App\Http\Controllers\Controller;
+use App\Models\LeaveRequest;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 class LeaveController extends Controller
@@ -12,7 +14,19 @@ class LeaveController extends Controller
      */
     public function index()
     {
-        return view('hr.leaves.index');
+        // Status: 0 = Pending, 1 = Approved, 2 = Rejected
+        $pendingCount = LeaveRequest::where('status', 0)->count();
+        $todayLeaves = LeaveRequest::whereDate('start_date', '<=', today())
+            ->whereDate('end_date', '>=', today())
+            ->where('status', 1)
+            ->count();
+
+        $leaveRequests = LeaveRequest::with('employee')
+            ->orderByRaw('CASE WHEN status = ? THEN 0 ELSE 1 END', [0])
+            ->latest()
+            ->paginate(10);
+
+        return view('hr.leaves.index', compact('leaveRequests', 'pendingCount', 'todayLeaves'));
     }
 
     /**
@@ -20,7 +34,7 @@ class LeaveController extends Controller
      */
     public function create()
     {
-        //
+        
     }
 
     /**
@@ -28,7 +42,7 @@ class LeaveController extends Controller
      */
     public function store(Request $request)
     {
-        //
+
     }
 
     /**
@@ -36,25 +50,47 @@ class LeaveController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $leaveRequest = LeaveRequest::findOrFail($id);
+        return view('hr.leaves.show', ['leaveRequest' => $leaveRequest]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
-    {
-        //
-    }
+    public function edit(string $id) {}
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
     {
-        //
-    }
+        $leaveRequest = LeaveRequest::findOrFail($id);
 
+        if ($request->action == 'approve') {
+            $leaveRequest->update([
+                'status' => 1,
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+            ]);
+            return redirect()->route('leaves.index')->with('success', 'Leave request has been approved.');
+        }
+
+        if ($request->action == 'reject') {
+            $request->validate([
+                'rejection_reason' => 'required_without:no_reason|string|max:255',
+            ]);
+
+            $leaveRequest->update([
+                'status' => 2,
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+                'rejection_reason' => $request->no_reason ? null : $request->rejection_reason,
+            ]);
+            return redirect()->route('leaves.index')->with('success', 'Leave request has been rejected.');
+        }
+
+        return redirect()->back()->with('error', 'Invalid action.');
+    }
     /**
      * Remove the specified resource from storage.
      */

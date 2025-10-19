@@ -32,7 +32,13 @@
         {{-- Admin Menu --}}
         @if (auth()->user()->role === 'admin')
             @php
-                $isHrMenuActive = request()->routeIs('employees.*', 'departments.*', 'holidays.*', 'attendances.*', 'leaves.*');
+                $isHrMenuActive = request()->routeIs(
+                    'employees.*',
+                    'departments.*',
+                    'holidays.*',
+                    'attendances.*',
+                    'leaves.*',
+                );
                 $isAttendanceMenuActive = request()->routeIs('attendances.*');
                 $isLeavesMenuActive = request()->routeIs('leaves.*');
             @endphp
@@ -188,6 +194,23 @@
                         <path d="m9 11 3 3L22 4" />
                     </svg>
                     <span class="ml-4">My Attendance</span>
+                </a>
+            </li>
+            <li class="relative px-6 py-3">
+                <a href="{{ route('my-leaves.index') }}" @class([
+                    'inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
+                    'text-blue-600 dark:text-blue-300' => request()->routeIs('my-leaves.*'),
+                ])>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" class="lucide lucide-clipboard-clock-icon lucide-clipboard-clock">
+                        <path d="M16 14v2.2l1.6 1" />
+                        <path d="M16 4h2a2 2 0 0 1 2 2v.832" />
+                        <path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h2" />
+                        <circle cx="16" cy="16" r="6" />
+                        <rect x="8" y="2" width="8" height="4" rx="1" />
+                    </svg>
+                    <span class="ml-4">My Leave</span>
                 </a>
             </li>
         @endif
