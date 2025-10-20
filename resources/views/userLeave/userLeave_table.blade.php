@@ -13,7 +13,6 @@
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
             @forelse($myRequests as $request)
                 @php
-                    // ... (logika match PHP Anda tetap sama)
                     $leaveType = match ($request->leave_type) {
                         0 => 'Sick Leave',
                         1 => 'Annual Leave',
