@@ -69,7 +69,7 @@
 
                 {{-- Submenu HR Management --}}
                 <ul x-show="isOpen" x-collapse class="mt-2 space-y-2 text-sm font-medium text-gray-500 rounded-md">
-                    @foreach ([['route' => 'departments.index', 'label' => 'Departments'], ['route' => 'employees.index', 'label' => 'Employee Lists'], ['route' => 'holidays.index', 'label' => 'Holidays']] as $item)
+                    @foreach ([['route' => 'departments.index', 'label' => 'Departments'], ['route' => 'employees.index', 'label' => 'Employee Lists'], ['route' => 'holidays.index', 'label' => 'Holidays'], ['route' => 'leaves.index', 'label' => 'Leaves']] as $item)
                         <li>
                             <a href="{{ route($item['route']) }}" @class([
                                 'flex items-center gap-2 py-2 rounded-md transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
@@ -100,7 +100,7 @@
                                     class="lucide lucide-dot-icon lucide-dot">
                                     <circle cx="12.1" cy="12.1" r="1" />
                                 </svg>
-                                Attendance
+                                Attendances
                             </span>
                             <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': isOpen }"
                                 fill="currentColor" viewBox="0 0 20 20">
@@ -122,51 +122,6 @@
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round"
-                                            class="lucide lucide-dot-icon lucide-dot">
-                                            <circle cx="12.1" cy="12.1" r="1" />
-                                        </svg>
-                                        {{ $item['label'] }}
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </li>
-
-                    {{-- Leaves --}}
-                    <li class="py-1" x-data="{ isOpen: {{ $isLeavesMenuActive ? 'true' : 'false' }} }" x-init="if ({{ $isLeavesMenuActive ? 'true' : 'false' }}) isOpen = true">
-                        <button @click="isOpen = !isOpen" @class([
-                            'inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
-                            'text-blue-600 dark:text-blue-300' => $isLeavesMenuActive,
-                        ])>
-                            <span class="inline-flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round"
-                                    class="lucide lucide-dot-icon lucide-dot">
-                                    <circle cx="12.1" cy="12.1" r="1" />
-                                </svg>
-                                Leaves
-                            </span>
-                            <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': isOpen }"
-                                fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M5.3 7.3a1 1 0 011.4 0L10 10.6l3.3-3.3a1 1 0 111.4 1.4l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 010-1.4z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                        </button>
-
-                        {{-- Leaves submenu --}}
-                        <ul x-show="isOpen" x-collapse class="ms-5 space-y-2">
-                            @foreach ([['route' => 'leaves.index', 'label' => 'Leaves']] as $item)
-                                <li>
-                                    <a href="{{ route($item['route']) }}" @class([
-                                        'flex items-center gap-2 px-3 py-2 rounded-md transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
-                                        'text-blue-600 bg-blue-100 dark:text-blue-200 dark:bg-blue-900' => request()->routeIs(
-                                            $item['route']),
-                                    ])>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                                             class="lucide lucide-dot-icon lucide-dot">
                                             <circle cx="12.1" cy="12.1" r="1" />
                                         </svg>
