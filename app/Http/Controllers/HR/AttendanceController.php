@@ -17,18 +17,45 @@ class AttendanceController extends Controller
     {
         $allEmployees = Employee::orderBy('full_name')->get();
         $selectedEmployee = null;
-        $attendanceHistory = null;
+        $attendanceHistory = collect();
+        $availableYears = collect();
 
-        if ($request->filled('employee_id')) {
-            $selectedEmployee = Employee::find($request->employee_id);
+        if ($request->filled('employee_id') && is_numeric($request->employee_id)) {
+
+            $selectedEmployee = Employee::with(['position', 'department', 'user'])
+                ->find($request->employee_id);
+
             if ($selectedEmployee) {
-                $attendanceHistory = Attendance::where('employee_id', $selectedEmployee->id)
-                    ->latest('date')
-                    ->paginate(15);
+                $availableYears = Attendance::where('employee_id', $selectedEmployee->id)
+                    ->selectRaw('EXTRACT(YEAR FROM date) as year')
+                    ->distinct()
+                    ->orderBy('year', 'desc')
+                    ->pluck('year');
             }
+
+            $query = Attendance::where('employee_id', $request->employee_id);
+
+            if ($request->filled('month')) {
+                $query->whereMonth('date', $request->month);
+            }
+
+            if ($request->filled('year')) {
+                $query->whereYear('date', $request->year);
+            }
+
+            $attendanceHistory = $query->orderBy('date', 'desc')->paginate(15);
         }
 
-        return view('hr.attendances.index', compact('allEmployees', 'selectedEmployee', 'attendanceHistory'));
+        if ($request->ajax()) {
+            return view('hr.attendances.attendance_table', compact('attendanceHistory'));
+        }
+
+        return view('hr.attendances.index', compact(
+            'allEmployees',
+            'selectedEmployee',
+            'attendanceHistory',
+            'availableYears'
+        ));
     }
 
     /**

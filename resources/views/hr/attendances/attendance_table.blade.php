@@ -1,4 +1,32 @@
-{{-- Container untuk Tabel dan Paginasi --}}
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+    {{-- Filter Tahun --}}
+    <div>
+        <select name="year" id="year"
+            class="mt-1 block w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg dark:text-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <option value="">All Years</option>
+            @foreach ($availableYears as $yearOption)
+                <option value="{{ $yearOption }}" {{ request('year') == $yearOption ? 'selected' : '' }}>
+                    {{ $yearOption }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    {{-- Filter Bulan --}}
+    <div>
+        <select name="month" id="month"
+            class="mt-1 block w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg dark:text-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <option value="">All Months</option>
+            @for ($m = 1; $m <= 12; $m++)
+                <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>
+                    {{ \Carbon\Carbon::create()->month($m)->format('F') }}
+                </option>
+            @endfor
+        </select>
+    </div>
+</div>
+
+
 <div class="w-full overflow-hidden rounded-xl shadow-md bg-white dark:bg-gray-800">
     <div class="w-full overflow-x-auto">
         <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">

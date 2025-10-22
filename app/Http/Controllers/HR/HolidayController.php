@@ -13,7 +13,7 @@ class HolidayController extends Controller
      */
     public function index(Request $request)
     {
-        $availableYears = Holiday::selectRaw('EXTRACT(YEAR FROM date) as year') // <-- INI YANG BENAR
+        $availableYears = Holiday::selectRaw('EXTRACT(YEAR FROM date) as year')
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year');

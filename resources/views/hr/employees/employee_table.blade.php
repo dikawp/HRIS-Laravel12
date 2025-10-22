@@ -64,6 +64,8 @@
                         <div class="flex justify-center items-center space-x-4">
                             <a href="{{ route('employees.edit', $employee->id) }}"
                                 class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
+                            <a href="{{ route('employees.show', $employee->id) }}"
+                                class="font-medium text-green-600 dark:text-green-500 hover:underline">View</a>
                             <form action="{{ route('employees.destroy', $employee->id) }}" method="POST"
                                 onsubmit="return confirm('Are you sure?');">
                                 @csrf
