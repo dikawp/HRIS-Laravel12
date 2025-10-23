@@ -183,6 +183,54 @@
             const container = document.getElementById('attendanceContainer');
 
             if (container) {
+                function fetchAttendanceTable() {
+                    const employeeIdInput = document.querySelector('input[name="employee_id"]');
+                    if (!employeeIdInput || !employeeIdInput.value) {
+                        return;
+                    }
+                    const employeeId = employeeIdInput.value;
+                    const year = container.querySelector('#year')?.value || '';
+                    const month = container.querySelector('#month')?.value || '';
+
+                    container.style.opacity = '0.5';
+                    container.style.transition = 'opacity 0.2s linear';
+
+                    const url = new URL('{{ route('attendances.index') }}');
+                    url.searchParams.append('employee_id', employeeId);
+                    url.searchParams.append('year', year);
+                    url.searchParams.append('month', month);
+
+                    fetch(url, {
+                            method: 'GET',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'text/html'
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.text();
+                        })
+                        .then(html => {
+                            container.innerHTML = html;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching attendance data:', error);
+                            alert('Gagal memuat riwayat absensi. Silakan coba lagi.');
+                        })
+                        .finally(() => {
+                            container.style.opacity = '1';
+                        });
+                }
+
+                container.addEventListener('change', function(e) {
+                    if (e.target.id === 'year' || e.target.id === 'month') {
+                        fetchAttendanceTable();
+                    }
+                });
+
                 container.addEventListener('click', function(e) {
                     const toggleButton = e.target.closest('.details-toggle');
                     if (!toggleButton) return;

@@ -144,7 +144,7 @@ class UserLeaveController extends Controller
             return redirect()->route('my-leaves.index')->with('error', 'Cannot delete a request that has already been processed.');
         }
 
-        // Hapus file attachment dari storage
+        // Hapus attachment dari storage
         if ($leaveRequest->attachment) {
             Storage::disk('public')->delete($leaveRequest->attachment);
         }

@@ -5,7 +5,6 @@
                 <th scope="col" class="px-4 py-3 lg:hidden"><span class="sr-only">Expand</span></th>
                 <th scope="col" class="px-6 py-3 whitespace-nowrap">No</th>
                 <th scope="col" class="px-6 py-3 whitespace-nowrap">Name</th>
-                <th scope="col" class="hidden px-6 py-3 whitespace-nowrap lg:table-cell">Email</th>
                 <th scope="col" class="hidden px-6 py-3 whitespace-nowrap lg:table-cell">Department</th>
                 <th scope="col" class="hidden px-6 py-3 whitespace-nowrap lg:table-cell">Position</th>
                 <th scope="col" class="hidden px-6 py-3 whitespace-nowrap lg:table-cell">Hire Date</th>
@@ -53,7 +52,6 @@
                             </div>
                         </div>
                     </td>
-                    <td class="hidden px-6 py-4 lg:table-cell">{{ $employee->user->email }}</td>
                     <td class="hidden px-6 py-4 lg:table-cell"><span
                             class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">{{ $employee->department->name }}</span>
                     </td>
@@ -103,10 +101,6 @@
                                     <div class="text-sm text-gray-500 dark:text-gray-400">NIK:
                                         {{ $employee->nik ?? 'N/A' }}</div>
                                 </div>
-                            </div>
-
-                            <div class="flex flex-col"><span
-                                    class="font-bold text-xs uppercase text-gray-500 dark:text-gray-400">Email</span><span>{{ $employee->user->email }}</span>
                             </div>
                             <div class="flex flex-col"><span
                                     class="font-bold text-xs uppercase text-gray-500 dark:text-gray-400">Department</span><span>{{ $employee->department->name }}</span>

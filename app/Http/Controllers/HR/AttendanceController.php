@@ -27,29 +27,28 @@ class AttendanceController extends Controller
 
             if ($selectedEmployee) {
                 $availableYears = Attendance::where('employee_id', $selectedEmployee->id)
-                    ->selectRaw('EXTRACT(YEAR FROM date) as year')
-                    ->distinct()
-                    ->orderBy('year', 'desc')
+                    ->selectRaw('DISTINCT ON (EXTRACT(YEAR FROM date)) EXTRACT(YEAR FROM date)::INT AS year')
+                    ->orderByRaw('EXTRACT(YEAR FROM date) DESC')
                     ->pluck('year');
             }
 
-            $query = Attendance::where('employee_id', $request->employee_id);
-
-            if ($request->filled('month')) {
-                $query->whereMonth('date', $request->month);
-            }
-
-            if ($request->filled('year')) {
-                $query->whereYear('date', $request->year);
-            }
-
-            $attendanceHistory = $query->orderBy('date', 'desc')->paginate(15);
+            $attendanceHistory = Attendance::query()
+                ->where('employee_id', $request->employee_id)
+                ->when($request->filled('month'), fn($q) => $q->whereRaw('EXTRACT(MONTH FROM date) = ?', [$request->month]))
+                ->when($request->filled('year'), fn($q) => $q->whereRaw('EXTRACT(YEAR FROM date) = ?', [$request->year]))
+                ->orderByDesc('date')
+                ->paginate(15);
         }
 
+        // Render partial untuk AJAX (Selected Employee)
         if ($request->ajax()) {
-            return view('hr.attendances.attendance_table', compact('attendanceHistory'));
+            return view('hr.attendances.attendance_table', compact(
+                'attendanceHistory',
+                'availableYears'
+            ));
         }
 
+        // Render halaman utama
         return view('hr.attendances.index', compact(
             'allEmployees',
             'selectedEmployee',

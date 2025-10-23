@@ -19,10 +19,12 @@ class EmployeeController extends Controller
      */
     public function index(Request $request)
     {
+        // Ambil parameter filter
         $search = $request->query('search');
         $departmentId = $request->query('department_id');
         $positionId = $request->query('position_id');
 
+        // Base query employees
         $query = Employee::query()
             ->select('employees.*')
             ->join('users', function ($join) {
@@ -35,23 +37,20 @@ class EmployeeController extends Controller
 
         // Search filter
         if ($search) {
-            $query->where(function ($subQuery) use ($search) {
-                $subQuery->where('employees.full_name', 'ILIKE', "%{$search}%")
-                    ->orWhere('users.email', 'ILIKE', "%{$search}%")
-                    ->orWhere('departments.name', 'ILIKE', "%{$search}%")
-                    ->orWhere('positions.name', 'ILIKE', "%{$search}%");
+            $searchTerm = "%{$search}%";
+            $query->where(function ($subQuery) use ($searchTerm) {
+                $subQuery
+                    ->where('employees.full_name', 'ILIKE', $searchTerm)
+                    ->orWhere('users.email', 'ILIKE', $searchTerm)
+                    ->orWhere('departments.name', 'ILIKE', $searchTerm)
+                    ->orWhere('positions.name', 'ILIKE', $searchTerm);
             });
         }
 
-        // Department
-        $query->when($departmentId, function ($q, $deptId) {
-            $q->where('employees.department_id', $deptId);
-        });
-
-        // Position
-        $query->when($positionId, function ($q, $posId) {
-            $q->where('employees.position_id', $posId);
-        });
+        // Filter department dan position
+        $query
+            ->when($departmentId, fn($q) => $q->where('employees.department_id', $departmentId))
+            ->when($positionId, fn($q) => $q->where('employees.position_id', $positionId));
 
         $employees = $query
             ->orderByDesc('employees.created_at')
@@ -60,12 +59,15 @@ class EmployeeController extends Controller
 
         $departments = $request->ajax() ? [] : Department::orderBy('name')->get();
 
+        // render partial table
         if ($request->ajax()) {
             return view('hr.employees.employee_table', compact('employees'))->render();
         }
 
+        // render halaman utama
         return view('hr.employees.index', compact('employees', 'departments'));
     }
+
 
     /**
      * Show the form for creating a new resource.
