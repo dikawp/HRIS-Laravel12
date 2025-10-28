@@ -47,7 +47,6 @@ class EmployeeSeeder extends Seeder
                 'position_id'    => $position->id,
                 'department_id'  => $department->id,
                 'photo'          => null,
-                'status'         => $faker->randomElement(['Aktif', 'Cuti', 'Resign']),
             ]);
         }
     }

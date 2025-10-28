@@ -6,34 +6,12 @@
                 <th class="px-6 py-3 font-semibold">Employee</th>
                 <th class="px-6 py-3 font-semibold">Status</th>
                 <th class="hidden px-6 py-3 font-semibold lg:table-cell">Department</th>
-                <th class="hidden px-6 py-3 font-semibold lg:table-cell">Leave Type</th>
                 <th class="hidden px-6 py-3 font-semibold lg:table-cell">Date</th>
                 <th class="hidden px-6 py-3 font-semibold text-center lg:table-cell">Action</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
             @forelse($leaveRequests as $request)
-                @php
-                    $leaveType = match ($request->leave_type) {
-                        0 => 'Sick Leave',
-                        1 => 'Annual Leave',
-                        2 => 'Personal Leave',
-                        default => 'Unknown',
-                    };
-                    $statusClasses = match ($request->status) {
-                        0 => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100',
-                        1 => 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100',
-                        2 => 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100',
-                        default => 'bg-gray-100 text-gray-700 dark:bg-gray-600 dark:text-gray-100',
-                    };
-                    $statusLabel = match ($request->status) {
-                        0 => 'Pending',
-                        1 => 'Approved',
-                        2 => 'Rejected',
-                        default => 'Unknown',
-                    };
-                @endphp
-
                 {{-- Main Row --}}
                 <tr
                     class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600/50 transition-colors duration-150">
@@ -76,10 +54,6 @@
                                     class="font-bold text-xs uppercase text-gray-500 dark:text-gray-400">Department</span>
                                 <p class="text-gray-800 dark:text-gray-200">{{ $request->employee->department->name }}
                                 </p>
-                            </div>
-                            <div><span class="font-bold text-xs uppercase text-gray-500 dark:text-gray-400">Leave
-                                    Type</span>
-                                <p class="text-gray-800 dark:text-gray-200">{{ $leaveType }}</p>
                             </div>
                             <div><span class="font-bold text-xs uppercase text-gray-500 dark:text-gray-400">Date</span>
                                 <p class="text-gray-800 dark:text-gray-200">{{ $request->start_date->format('d M Y') }}

@@ -8,19 +8,24 @@ class Employee extends Model
 {
     protected $fillable = [
         'user_id',
-        'nik',
         'full_name',
+        'nik',
+        'phone_number',
+        'bank',
+        'emergency',
         'place_of_birth',
         'date_of_birth',
         'gender',
         'marital_status',
         'address',
-        'phone_number',
         'hire_date',
-        'position_id',
         'department_id',
-        'status',
-        'photo'
+        'position_id',
+        'photo',
+        'schedule_start_time',
+        'schedule_end_time',
+        'annual_leave_days',
+        'contract_type',
     ];
 
     public function user()

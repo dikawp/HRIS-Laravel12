@@ -3,7 +3,6 @@
         <thead class="text-xs uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-300">
             <tr>
                 <th scope="col" class="px-4 py-3 lg:hidden"><span class="sr-only">Expand</span></th>
-                <th class="px-6 py-3 font-semibold">Leave Type</th>
                 <th class="px-6 py-3 font-semibold">Status</th>
                 <th class="hidden px-6 py-3 font-semibold lg:table-cell">Date</th>
                 <th class="hidden px-6 py-3 font-semibold lg:table-cell">Reason</th>
@@ -12,27 +11,6 @@
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
             @forelse($myRequests as $request)
-                @php
-                    $leaveType = match ($request->leave_type) {
-                        0 => 'Sick Leave',
-                        1 => 'Annual Leave',
-                        2 => 'Personal Leave',
-                        default => 'Unknown',
-                    };
-                    $statusClasses = match ($request->status) {
-                        0 => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100',
-                        1 => 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100',
-                        2 => 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100',
-                        default => 'bg-gray-100 text-gray-700 dark:bg-gray-600 dark:text-gray-100',
-                    };
-                    $statusLabel = match ($request->status) {
-                        0 => 'Pending',
-                        1 => 'Approved',
-                        2 => 'Rejected',
-                        default => 'Unknown',
-                    };
-                @endphp
-
                 {{-- Main Row --}}
                 <tr
                     class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600/50 transition-colors duration-150">
@@ -49,7 +27,6 @@
                             </svg>
                         </button>
                     </td>
-                    <td class="px-6 py-4 font-medium text-gray-800 dark:text-gray-200">{{ $leaveType }}</td>
                     <td class="px-6 py-4"><span
                             class="px-3 py-1 text-xs font-semibold rounded-full {{ $statusClasses }}">{{ $statusLabel }}</span>
                     </td>

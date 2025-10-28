@@ -22,11 +22,21 @@ return new class extends Migration
             $table->string('marital_status', 20)->nullable();
             $table->text('address')->nullable();
             $table->string('phone_number', 20)->unique()->nullable();
+            $table->string('emergency', 20)->nullable();
+            $table->string('bank', 50)->nullable();
             $table->date('hire_date');
             $table->foreignId('position_id')->constrained('positions');
             $table->foreignId('department_id')->constrained('departments');
             $table->string('photo')->nullable();
-            $table->string('status', 50)->default('Aktif');
+
+            // --- Kolom Jadwal & Cuti ---
+            $table->time('schedule_start_time')->default('08:00:00'); // Jam masuk
+            $table->time('schedule_end_time')->default('16:00:00');   // Jam pulang
+
+            // 0: Full-time, 1: Contract, 2: Intern
+            $table->unsignedTinyInteger('contract_type')->default(0);
+            $table->unsignedTinyInteger('annual_leave_days')->nullable(); 
+
             $table->timestamps();
         });
     }

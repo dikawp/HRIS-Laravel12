@@ -35,7 +35,6 @@ class UserLeaveController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'leave_type' => 'required|integer|in:0,1,2', // Disesuaikan: 0: Sick, 1: Annual, 2: Personal
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after_or_equal:start_date',
             'reason' => 'required|string|max:1000',
@@ -49,7 +48,6 @@ class UserLeaveController extends Controller
 
         LeaveRequest::create([
             'employee_id' => Auth::user()->employee->id,
-            'leave_type' => $request->leave_type,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'reason' => $request->reason,

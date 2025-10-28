@@ -30,7 +30,7 @@
         </li>
 
         {{-- Admin Menu --}}
-        @if (auth()->user()->role === 'admin')
+        @if (auth()->user()->role === 1)
             @php
                 $isHrMenuActive = request()->routeIs(
                     'employees.*',
@@ -136,7 +136,7 @@
         @endif
 
         {{-- User Menu --}}
-        @if (auth()->user()->role === 'user')
+        @if (auth()->user()->role === 0)
             <li class="relative px-6 py-3">
                 <a href="{{ route('my.attendance.index') }}" @class([
                     'inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',

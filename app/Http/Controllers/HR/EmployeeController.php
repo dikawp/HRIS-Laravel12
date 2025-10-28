@@ -9,8 +9,8 @@ use App\Models\Position;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class EmployeeController extends Controller
 {
@@ -19,63 +19,45 @@ class EmployeeController extends Controller
      */
     public function index(Request $request)
     {
-        // Ambil parameter filter
         $search = $request->query('search');
         $departmentId = $request->query('department_id');
         $positionId = $request->query('position_id');
 
-        // Base query employees
-        $query = Employee::query()
-            ->select('employees.*')
-            ->join('users', function ($join) {
-                $join->on('employees.user_id', '=', 'users.id')
-                    ->where('users.role', '=', 'user');
+        // Query dasar employees dengan relasi user, department, position
+        $employees = Employee::with(['user', 'department', 'position'])
+            ->whereHas('user', fn($q) => $q->where('role', 0))
+            ->when($search, function ($q) use ($search) {
+                $term = "%{$search}%";
+                $q->where(function ($sub) use ($term) {
+                    $sub->where('full_name', 'ILIKE', $term)
+                        ->orWhereHas('user', fn($u) => $u->where('email', 'ILIKE', $term))
+                        ->orWhereHas('department', fn($d) => $d->where('name', 'ILIKE', $term))
+                        ->orWhereHas('position', fn($p) => $p->where('name', 'ILIKE', $term));
+                });
             })
-            ->join('departments', 'employees.department_id', '=', 'departments.id')
-            ->join('positions', 'employees.position_id', '=', 'positions.id')
-            ->with(['user', 'department', 'position']);
-
-        // Search filter
-        if ($search) {
-            $searchTerm = "%{$search}%";
-            $query->where(function ($subQuery) use ($searchTerm) {
-                $subQuery
-                    ->where('employees.full_name', 'ILIKE', $searchTerm)
-                    ->orWhere('users.email', 'ILIKE', $searchTerm)
-                    ->orWhere('departments.name', 'ILIKE', $searchTerm)
-                    ->orWhere('positions.name', 'ILIKE', $searchTerm);
-            });
-        }
-
-        // Filter department dan position
-        $query
-            ->when($departmentId, fn($q) => $q->where('employees.department_id', $departmentId))
-            ->when($positionId, fn($q) => $q->where('employees.position_id', $positionId));
-
-        $employees = $query
-            ->orderByDesc('employees.created_at')
+            ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
+            ->when($positionId, fn($q) => $q->where('position_id', $positionId))
+            ->orderByDesc('created_at')
             ->paginate(10)
             ->withQueryString();
 
         $departments = $request->ajax() ? [] : Department::orderBy('name')->get();
 
-        // render partial table
         if ($request->ajax()) {
             return view('hr.employees.employee_table', compact('employees'))->render();
         }
 
-        // render halaman utama
         return view('hr.employees.index', compact('employees', 'departments'));
     }
-
 
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-        $departments = Department::all();
-        $positions = Position::all();
+        $departments = Department::orderBy('name')->get();
+        $positions = Position::orderBy('name')->get();
+
         return view('hr.employees.create', compact('departments', 'positions'));
     }
 
@@ -84,53 +66,28 @@ class EmployeeController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email',
-            'password' => 'required|string|min:8',
-            'full_name' => 'required|string|max:255',
-            'nik' => 'nullable|string|max:50|unique:employees,nik',
-            'phone_number' => 'nullable|string|max:20|unique:employees,phone_number',
-            'place_of_birth' => 'nullable|string|max:255',
-            'date_of_birth' => 'required|date',
-            'gender' => 'required|in:Male,Female',
-            'marital_status' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'hire_date' => 'required|date',
-            'department_id' => 'required|exists:departments,id',
-            'position_id' => 'required|exists:positions,id',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+        $validated = $this->validateEmployee($request);
 
         $user = User::create([
-            'name' => $validatedData['name'],
-            'email' => $validatedData['email'],
-            'password' => Hash::make($validatedData['password']),
-            'role' => 'user',
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => 0, // default user
         ]);
 
-        $photoPath = null;
-        if ($request->hasFile('photo')) {
-            $photoPath = $request->file('photo')->store('photos', 'public');
-        }
+        $photoPath = $this->handlePhotoUpload($request);
 
-        Employee::create([
-            'user_id' => $user->id,
-            'full_name' => $validatedData['full_name'],
-            'nik' => $validatedData['nik'],
-            'phone_number' => $validatedData['phone_number'],
-            'place_of_birth' => $validatedData['place_of_birth'],
-            'date_of_birth' => $validatedData['date_of_birth'],
-            'gender' => $validatedData['gender'],
-            'marital_status' => $validatedData['marital_status'],
-            'address' => $validatedData['address'],
-            'hire_date' => $validatedData['hire_date'],
-            'department_id' => $validatedData['department_id'],
-            'position_id' => $validatedData['position_id'],
-            'photo' => $photoPath,
-        ]);
+        Employee::create(array_merge(
+            $this->extractEmployeeData($validated),
+            [
+                'user_id' => $user->id,
+                'photo' => $photoPath,
+            ]
+        ));
 
-        return redirect()->route('employees.index')->with('success', 'Employee created successfully.');
+        return redirect()
+            ->route('employees.index')
+            ->with('success', 'Employee created successfully.');
     }
 
     /**
@@ -138,7 +95,7 @@ class EmployeeController extends Controller
      */
     public function show(string $id)
     {
-        $employee = Employee::findOrFail($id);
+        $employee = Employee::with(['user', 'department', 'position'])->findOrFail($id);
         return view('hr.employees.show', compact('employee'));
     }
 
@@ -147,8 +104,7 @@ class EmployeeController extends Controller
      */
     public function edit(string $id)
     {
-        $employee = Employee::findOrFail($id);
-
+        $employee = Employee::with(['user'])->findOrFail($id);
         $departments = Department::orderBy('name')->get();
         $positions = Position::orderBy('name')->get();
 
@@ -161,46 +117,32 @@ class EmployeeController extends Controller
     public function update(Request $request, string $id)
     {
         $employee = Employee::findOrFail($id);
+        $validated = $this->validateEmployee($request, $employee);
 
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($employee->user_id)],
-            'password' => 'nullable|string|min:8',
-
-            'full_name' => 'required|string|max:255',
-            'nik' => ['nullable', 'string', 'max:50', Rule::unique('employees')->ignore($employee->id)],
-            'phone_number' => ['nullable', 'string', 'max:20', Rule::unique('employees')->ignore($employee->id)],
-            'place_of_birth' => 'nullable|string|max:255',
-            'date_of_birth' => 'required|date',
-            'gender' => 'required|in:Male,Female',
-            'marital_status' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'hire_date' => 'required|date',
-            'department_id' => 'required|exists:departments,id',
-            'position_id' => 'required|exists:positions,id',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        // Update user
+        $user = $employee->user;
+        $user->fill([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
         ]);
 
-        $user = $employee->user;
-        $user->name = $validatedData['name'];
-        $user->email = $validatedData['email'];
-        if ($request->filled('password')) {
-            $user->password = Hash::make($validatedData['password']);
+        if (!empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
         }
+
         $user->save();
 
-        $employeeData = $request->except(['_token', '_method', 'name', 'email', 'password', 'photo']);
+        // Upload foto baru jika ada
+        $photoPath = $this->handlePhotoUpload($request, $employee->photo);
 
-        if ($request->hasFile('photo')) {
-            if ($employee->photo) {
-                Storage::disk('public')->delete($employee->photo);
-            }
-            $employeeData['photo'] = $request->file('photo')->store('photos', 'public');
-        }
+        $employee->update(array_merge(
+            $this->extractEmployeeData($validated),
+            ['photo' => $photoPath ?? $employee->photo]
+        ));
 
-        $employee->update($employeeData);
-
-        return redirect()->route('employees.index')->with('success', 'Employee updated successfully.');
+        return redirect()
+            ->route('employees.index')
+            ->with('success', 'Employee updated successfully.');
     }
 
     /**
@@ -210,8 +152,87 @@ class EmployeeController extends Controller
     {
         $employee = Employee::findOrFail($id);
 
+        // Hapus foto jika ada
+        if ($employee->photo) {
+            Storage::disk('public')->delete($employee->photo);
+        }
+
+        // Hapus user (otomatis delete employee via cascade jika diatur)
         $employee->user->delete();
 
-        return redirect()->route('employees.index')->with('success', 'Employee deleted successfully.');
+        return redirect()
+            ->route('employees.index')
+            ->with('success', 'Employee deleted successfully.');
+    }
+
+    private function validateEmployee(Request $request, ?Employee $employee = null): array
+    {
+        $userId = $employee?->user_id;
+        $employeeId = $employee?->id;
+
+        return $request->validate([
+            // User Info
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($userId)],
+            'password' => $employee ? 'nullable|string|min:8' : 'required|string|min:8',
+
+            // Personal Info
+            'full_name' => 'required|string|max:255',
+            'nik' => ['nullable', 'string', 'max:50', Rule::unique('employees')->ignore($employeeId)],
+            'phone_number' => ['nullable', 'string', 'max:20', Rule::unique('employees')->ignore($employeeId)],
+            'bank' => 'nullable|string|max:50',
+            'emergency' => 'nullable|string|max:20',
+            'place_of_birth' => 'nullable|string|max:255',
+            'date_of_birth' => 'required|date',
+            'gender' => 'required|in:Male,Female',
+            'marital_status' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+
+            // Employment Info
+            'hire_date' => 'required|date',
+            'department_id' => 'required|exists:departments,id',
+            'position_id' => 'required|exists:positions,id',
+            'schedule_start_time' => 'required|date_format:H:i',
+            'schedule_end_time' => 'required|date_format:H:i',
+            'contract_type' => ['required', 'integer', Rule::in([0, 1, 2])],
+            'annual_leave_days' => 'nullable|integer',
+        ]);
+    }
+
+    private function extractEmployeeData(array $validated): array
+    {
+        return [
+            'full_name' => $validated['full_name'],
+            'nik' => $validated['nik'] ?? null,
+            'phone_number' => $validated['phone_number'] ?? null,
+            'bank' => $validated['bank'] ?? null,
+            'emergency' => $validated['emergency'] ?? null,
+            'place_of_birth' => $validated['place_of_birth'] ?? null,
+            'date_of_birth' => $validated['date_of_birth'],
+            'gender' => $validated['gender'],
+            'marital_status' => $validated['marital_status'] ?? null,
+            'address' => $validated['address'] ?? null,
+            'hire_date' => $validated['hire_date'],
+            'department_id' => $validated['department_id'],
+            'position_id' => $validated['position_id'],
+            'schedule_start_time' => $validated['schedule_start_time'],
+            'schedule_end_time' => $validated['schedule_end_time'],
+            'contract_type' => $validated['contract_type'],
+            'annual_leave_days' => $validated['annual_leave_days'],
+        ];
+    }
+
+    private function handlePhotoUpload(Request $request, ?string $oldPhoto = null): ?string
+    {
+        if (!$request->hasFile('photo')) {
+            return null;
+        }
+
+        if ($oldPhoto) {
+            Storage::disk('public')->delete($oldPhoto);
+        }
+
+        return $request->file('photo')->store('photos', 'public');
     }
 }

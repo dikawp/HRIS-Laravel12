@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('leave_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('employee_id')->constrained('employees')->onDelete('cascade');
-            $table->integer('leave_type')->default(0); // 0: Sakit, 1: Izin, 3: Lainnya.
             $table->date('start_date');
             $table->date('end_date');
             $table->text('reason');

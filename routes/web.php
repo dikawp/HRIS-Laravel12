@@ -36,7 +36,7 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
     Route::get('/hr/dashboard', [DashboardController::class, 'index'])->name('hr.dashboard');
 
     // Departments
