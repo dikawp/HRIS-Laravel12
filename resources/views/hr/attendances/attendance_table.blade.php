@@ -1,3 +1,4 @@
+{{-- Filter (jika ada di partial ini) --}}
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
     {{-- Filter Tahun --}}
     <div>
@@ -42,6 +43,8 @@
                     {{-- Kolom yang hanya terlihat di desktop --}}
                     <th class="hidden px-6 py-3 font-semibold lg:table-cell">Check In</th>
                     <th class="hidden px-6 py-3 font-semibold lg:table-cell">Check Out</th>
+                    <th class="hidden px-6 py-3 font-semibold lg:table-cell">Status</th>
+                    <th class="hidden px-6 py-3 font-semibold lg:table-cell">Overtime</th>
                     <th class="hidden px-6 py-3 font-semibold text-center lg:table-cell">Actions</th>
                 </tr>
             </thead>
@@ -53,6 +56,7 @@
                         {{-- Tombol Toggle Mobile --}}
                         <td class="px-4 py-4 lg:hidden">
                             <button class="details-toggle" data-target="#details-{{ $log->id }}">
+                                {{-- SVG Icons --}}
                                 <svg class="w-5 h-5 expand-icon" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -67,8 +71,10 @@
                         </td>
 
                         {{-- Data yang Selalu Terlihat --}}
-                        <td class="px-6 py-4 font-medium text-gray-800 dark:text-gray-200">
-                            {{ \Carbon\Carbon::parse($log->date)->format('d M Y, l') }}
+                        <td class="px-6 py-4 font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                            {{ \Carbon\Carbon::parse($log->date)->format('d M Y') }}
+                            <span
+                                class="block text-xs text-gray-500">{{ \Carbon\Carbon::parse($log->date)->format('l') }}</span>
                         </td>
                         <td class="px-6 py-4">
                             <span class="font-semibold">{{ $log->work_hours ?? 'N/A' }}</span>
@@ -81,6 +87,24 @@
                         <td class="hidden px-6 py-4 lg:table-cell">
                             {{ $log->check_out ? \Carbon\Carbon::parse($log->check_out)->format('H:i') : '-' }}
                         </td>
+                        <td class="hidden px-6 py-4 lg:table-cell">
+                            @if ($log->status == 'Late')
+                                <span
+                                    class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
+                                    Late
+                                </span>
+                            @elseif($log->status == 'On Time')
+                                <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                    On Time
+                                </span>
+                            @else
+                                {{ $log->status ?? '-' }}
+                            @endif
+                        </td>
+                        {{-- === DATA OVERTIME (Desktop) === --}}
+                        <td class="hidden px-6 py-4 lg:table-cell">
+                            {{ $log->formatted_overtime }}
+                        </td>
                         <td class="hidden px-6 py-4 text-center lg:table-cell">
                             <a href="{{ route('attendances.edit', $log->id) }}"
                                 class="font-medium text-blue-600 dark:text-blue-500 hover:underline">
@@ -92,7 +116,7 @@
                     {{-- Baris Detail (Collapsible Details Row) untuk Mobile --}}
                     <tr id="details-{{ $log->id }}" class="hidden border-b dark:border-gray-700 lg:hidden">
                         <td colspan="3" class="p-4 bg-gray-50 dark:bg-gray-800/50">
-                            <div class="grid grid-cols-1 gap-y-4">
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-4">
                                 <div>
                                     <span class="font-bold text-xs uppercase text-gray-500 dark:text-gray-400">Check
                                         In</span>
@@ -107,7 +131,33 @@
                                         {{ $log->check_out ? \Carbon\Carbon::parse($log->check_out)->format('H:i:s') : '-' }}
                                     </p>
                                 </div>
-                                <div class="pt-4 border-t dark:border-gray-600">
+                                {{-- === DATA STATUS (Mobile) === --}}
+                                <div>
+                                    <span
+                                        class="font-bold text-xs uppercase text-gray-500 dark:text-gray-400">Status</span>
+                                    <p class="text-gray-800 dark:text-gray-200">
+                                        @if ($log->status == 'Late')
+                                            <span
+                                                class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
+                                                Late
+                                            </span>
+                                        @elseif($log->status == 'On Time')
+                                            On Time
+                                        @else
+                                            {{ $log->status ?? '-' }}
+                                        @endif
+                                    </p>
+                                </div>
+                                {{-- === DATA OVERTIME (Mobile) === --}}
+                                <div>
+                                    <span
+                                        class="font-bold text-xs uppercase text-gray-500 dark:text-gray-400">Overtime</span>
+                                    <p class="text-gray-800 dark:text-gray-200">
+                                        {{ $log->formatted_overtime }}
+                                    </p>
+                                </div>
+
+                                <div class="col-span-2 pt-4 border-t dark:border-gray-600">
                                     <span
                                         class="font-bold text-xs uppercase text-gray-500 dark:text-gray-400">Action</span>
                                     <div class="mt-2">
@@ -123,8 +173,8 @@
 
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
-                            No attendance history found for this employee.
+                        <td colspan="8" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                            No attendance history found.
                         </td>
                     </tr>
                 @endforelse

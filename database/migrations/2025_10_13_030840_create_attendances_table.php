@@ -13,15 +13,17 @@ return new class extends Migration
     {
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('employee_id')->constrained('employees')->onDelete('cascade');
+            $table->foreignId('employee_id')->constrained('employees')->onDelete('cascade'); // Pastikan relasi ke employees
             $table->date('date');
-            $table->time('check_in')->nullable();
-            $table->time('check_out')->nullable();
-            $table->string('status'); 
+            $table->dateTime('check_in')->nullable();
+            $table->dateTime('check_out')->nullable();
+            $table->string('status', 20)->nullable();
+            $table->integer('overtime_minutes')->default(0);
             $table->text('notes')->nullable();
             $table->timestamps();
 
-            $table->unique(['employee_id', 'date']);
+            // Index untuk performa query
+            $table->index(['employee_id', 'date']);
         });
     }
 

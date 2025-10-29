@@ -8,15 +8,19 @@
         <span>HRIS GABUT</span>
     </a>
 
+    @php
+        $dashboardRouteName = auth()->user()->role === 1 ? 'hr.dashboard' : 'dashboard';
+        $dashboardRouteUrl = route($dashboardRouteName);
+    @endphp
+
     <ul class="mt-4 ms-1 space-y-1">
         {{-- Dashboard --}}
         <li class="relative px-6 py-3">
-            <a href="{{ auth()->user()->role === 'admin' ? route('hr.dashboard') : route('dashboard') }}"
-                @class([
-                    'inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
-                    'text-blue-600 dark:text-blue-300' => request()->routeIs(
-                        auth()->user()->role === 'admin' ? 'hr.dashboard' : 'dashboard'),
-                ])>
+            <a href="{{ $dashboardRouteUrl }}" @class([
+                'inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
+                'text-blue-600 dark:text-blue-300' => request()->routeIs(
+                    $dashboardRouteName),
+            ])>
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                     class="lucide lucide-layout-dashboard-icon lucide-layout-dashboard">
@@ -40,11 +44,9 @@
                     'leaves.*',
                 );
                 $isAttendanceMenuActive = request()->routeIs('attendances.*');
-                $isLeavesMenuActive = request()->routeIs('leaves.*');
             @endphp
 
-            {{-- HR Management --}}
-            <li class="relative px-6 py-3" x-data="{ isOpen: {{ $isHrMenuActive ? 'true' : 'false' }} }" x-init="if ({{ $isHrMenuActive ? 'true' : 'false' }}) isOpen = true">
+            <li class="relative px-6 py-3" x-data="{ isOpen: @json($isHrMenuActive) }">
                 <button @click="isOpen = !isOpen" @class([
                     'inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
                     'text-blue-600 dark:text-blue-300' => $isHrMenuActive,
@@ -88,7 +90,7 @@
                     @endforeach
 
                     {{-- Attendance Nested Dropdown --}}
-                    <li class="py-1" x-data="{ isOpen: {{ $isAttendanceMenuActive ? 'true' : 'false' }} }" x-init="if ({{ $isAttendanceMenuActive ? 'true' : 'false' }}) isOpen = true">
+                    <li class="py-1" x-data="{ isOpen: @json($isAttendanceMenuActive) }">
                         <button @click="isOpen = !isOpen" @class([
                             'inline-flex items-center justify-between w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200',
                             'text-blue-600 dark:text-blue-300' => $isAttendanceMenuActive,

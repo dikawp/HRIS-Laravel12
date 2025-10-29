@@ -9,7 +9,8 @@
         <div class="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
             {{-- Error Message --}}
             @if ($errors->any())
-                <div class="mb-6 p-4 rounded-lg bg-red-100 border border-red-300 text-red-800">
+                <div
+                    class="mb-6 p-4 rounded-lg bg-red-100 border border-red-300 text-red-800 dark:bg-red-900/30 dark:border-red-600 dark:text-red-300">
                     <p class="font-semibold mb-1">Oops! Something went wrong:</p>
                     <ul class="list-disc pl-5 space-y-1 text-sm">
                         @foreach ($errors->all() as $error)
@@ -22,8 +23,6 @@
             {{-- Form --}}
             <form action="{{ route('attendances.store') }}" method="POST" class="space-y-6">
                 @csrf
-
-                {{-- Employee Selector --}}
                 <div x-data="{
                     open: false,
                     search: '',
@@ -31,7 +30,8 @@
                     selectedEmployeeName: '{{ $employees->firstWhere('id', old('employee_id', $selectedEmployeeId))?->full_name ?? '-- Choose Employee --' }}',
                     employees: {{ json_encode($employees->map(fn($emp) => ['id' => $emp->id, 'name' => $emp->full_name])) }}
                 }" class="relative">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Employee</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Employee <span
+                            class="text-red-500">*</span></label>
                     <input type="hidden" name="employee_id" x-model="selectedEmployeeId">
 
                     <button type="button" @click="open = !open"
@@ -42,7 +42,7 @@
                         </svg>
                     </button>
 
-                    <div x-show="open" x-transition
+                    <div x-show="open" x-transition @click.away="open = false"
                         class="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 overflow-hidden">
                         <input type="text" x-model="search" placeholder="Search employee..."
                             class="w-full px-3 py-2 border-b dark:border-gray-600 focus:outline-none text-sm dark:bg-gray-700 dark:text-gray-200">
@@ -51,7 +51,7 @@
                                 x-for="employee in employees.filter(e => e.name.toLowerCase().includes(search.toLowerCase()))"
                                 :key="employee.id">
                                 <li @click="selectedEmployeeId = employee.id; selectedEmployeeName = employee.name; open = false;"
-                                    class="px-3 py-2 cursor-pointer text-sm hover:bg-blue-50 dark:hover:bg-gray-600"
+                                    class="px-3 py-2 cursor-pointer text-sm hover:bg-blue-50 dark:hover:bg-gray-600 dark:text-gray-200"
                                     x-text="employee.name"></li>
                             </template>
                             <li x-show="employees.filter(e => e.name.toLowerCase().includes(search.toLowerCase())).length === 0"
@@ -63,42 +63,35 @@
                 {{-- Grid Form Fields --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-                        <input type="date" name="date" value="{{ old('date', date('Y-m-d')) }}"
-                            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            required>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                        <select name="status"
-                            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            required>
-                            <option value="Hadir" @selected(old('status') == 'Hadir')>Hadir</option>
-                            <option value="Sakit" @selected(old('status') == 'Sakit')>Sakit</option>
-                            <option value="Izin" @selected(old('status') == 'Izin')>Izin</option>
-                            <option value="Cuti" @selected(old('status') == 'Cuti')>Cuti</option>
-                            <option value="Alpa" @selected(old('status') == 'Alpa')>Alpa</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Check In</label>
-                        <input type="time" name="check_in" value="{{ old('check_in') }}"
+                        <label for="check_in" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Check
+                            In Time</label>
+                        <input type="time" id="check_in" name="check_in" value="{{ old('check_in') }}" step="1"
                             class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Leave blank if absent/leave/etc.</p>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Check Out</label>
-                        <input type="time" name="check_out" value="{{ old('check_out') }}"
+                        <label for="date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date
+                            <span class="text-red-500">*</span></label>
+                        <input type="date" id="date" name="date" value="{{ old('date', date('Y-m-d')) }}"
+                            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            required>
+                    </div>
+
+
+                    <div>
+                        <label for="check_out" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Check
+                            Out Time</label>
+                        <input type="time" id="check_out" name="check_out" value="{{ old('check_out') }}" step="1"
                             class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
                 </div>
 
                 {{-- Notes --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes (Optional)</label>
-                    <textarea name="notes" rows="3"
+                    <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes
+                        (Optional)</label>
+                    <textarea id="notes" name="notes" rows="3" placeholder="Add notes like Sick, Leave, Permit, etc."
                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none">{{ old('notes') }}</textarea>
                 </div>
 

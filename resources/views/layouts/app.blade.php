@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', config('app.name', 'Laravel'))</title>
+    <title>@yield('title', config('app.name', 'HRBT'))</title>
 
     <link rel="icon" href="{{ asset('icon.png') }}" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -17,8 +17,8 @@
     @stack('styles')
 </head>
 
-<body class="font-sans antialiased">
-    <div class="flex h-screen bg-gray-100 dark:bg-gray-900" :class="{ 'overflow-hidden': isSideMenuOpen }">
+<body class="font-sans antialiased overflow-y-hidden">
+    <div class="flex h-dvh bg-gray-100 dark:bg-gray-900" :class="{ 'overflow-hidden': isSideMenuOpen }">
 
         <!-- Desktop sidebar -->
         @include('layouts.components.sidebar')
@@ -40,7 +40,7 @@
             @include('layouts.components.navbar')
 
             <!-- Page Content -->
-            <main class="h-full pb-16 overflow-y-auto">
+            <main class="pb-16 overflow-y-auto">
                 <div class="container grid px-6 mx-auto">
                     <!-- Page Heading -->
                     @hasSection('header')

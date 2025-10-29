@@ -74,7 +74,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             @if ($selectedEmployee)
                 <!-- Employee Profile Card -->
-                <div class="lg:col-span-4">
+                <div class="lg:col-span-3">
                     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden">
                         <div class="p-6">
                             {{-- Header: Avatar, Name, Position --}}
@@ -159,7 +159,7 @@
             @endif
 
             <!-- Attendance History Table -->
-            <div id="attendanceContainer" class="{{ $selectedEmployee ? 'lg:col-span-8' : 'col-span-full' }}">
+            <div id="attendanceContainer" class="{{ $selectedEmployee ? 'lg:col-span-9' : 'col-span-full' }}">
                 @if ($selectedEmployee)
                     @include('hr.attendances.attendance_table', [
                         'attendanceHistory' => $attendanceHistory,

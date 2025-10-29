@@ -14,7 +14,7 @@ class UserAttendanceController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $employee = $user->employee; // Asumsi relasi 'employee' sudah ada di model User
+        $employee = $user->employee;
 
         // Cari data absensi hari ini
         $todayAttendance = Attendance::where('employee_id', $employee->id)
@@ -36,26 +36,40 @@ class UserAttendanceController extends Controller
      */
     public function checkIn(Request $request)
     {
-        $employee = Auth::user()->employee;
+        $user = Auth::user();
+        if (!$user->employee) {
+            abort(403, 'Employee data not found.');
+        }
+        $employee = $user->employee;
 
-        // Cek apakah sudah check-in hari ini
         $alreadyCheckedIn = Attendance::where('employee_id', $employee->id)
             ->whereDate('date', today())
             ->exists();
-
         if ($alreadyCheckedIn) {
             return redirect()->route('my.attendance.index')->with('error', 'You have already checked in today.');
         }
 
-        // Buat record absensi baru
+        $checkInTime = now();
+        $status = 'On Time';
+
+        if ($employee->schedule_start_time) {
+            $scheduleStartTimeToday = today()->setTimeFromTimeString($employee->schedule_start_time);
+            $lateThreshold = $scheduleStartTimeToday->copy()->addMinutes(15); // Toleransi 15 menit
+
+            if ($checkInTime->isAfter($lateThreshold)) {
+                $status = 'Late';
+            }
+        }
+
+        // Buat record absensi
         Attendance::create([
             'employee_id' => $employee->id,
             'date' => today(),
-            'check_in' => now(),
-            'status' => 'Hadir',
+            'check_in' => $checkInTime,
+            'status' => $status,
         ]);
 
-        return redirect()->route('my.attendance.index')->with('success', 'Check-in successful!');
+        return redirect()->route('my.attendance.index')->with('success', 'Check-in successful! Status: ' . $status);
     }
 
     /**
@@ -63,7 +77,13 @@ class UserAttendanceController extends Controller
      */
     public function checkOut(Request $request)
     {
-        $employee = Auth::user()->employee;
+        $user = Auth::user();
+
+        if (!$user->employee) {
+            abort(403, 'Employee data not found.');
+        }
+
+        $employee = $user->employee;
 
         // Cari record absensi hari ini yang belum check-out
         $attendance = Attendance::where('employee_id', $employee->id)
@@ -72,14 +92,45 @@ class UserAttendanceController extends Controller
             ->first();
 
         if (!$attendance) {
-            return redirect()->route('my.attendance.index')->with('error', 'No active check-in found to check-out.');
+            return redirect()->route('my.attendance.index')
+                ->with('error', 'No active check-in found to check-out.');
         }
 
-        // Update waktu check-out
+        // --- Waktu checkout ---
+        $checkOutTime = now(config('app.timezone'));
+        $overtimeMinutes = 0;
+
+        // --- Logika perhitungan lembur ---
+        if ($employee->schedule_end_time) {
+            $scheduleEndTimeToday = $checkOutTime->copy()->setTimeFromTimeString($employee->schedule_end_time);
+
+            if ($checkOutTime->isAfter($scheduleEndTimeToday)) {
+                $diffMinutes = (int) round($scheduleEndTimeToday->diffInMinutes($checkOutTime));
+
+
+                // Hitung lembur hanya jika lebih dari 60 menit
+                if ($diffMinutes > 60) {
+                    $overtimeMinutes = $diffMinutes;
+                }
+            }
+
+            // dd($overtimeMinutes);
+        }
+
+        // Update record absensi
         $attendance->update([
-            'check_out' => now(),
+            'check_out' => $checkOutTime,
+            'overtime_minutes' => $overtimeMinutes,
         ]);
 
-        return redirect()->route('my.attendance.index')->with('success', 'Check-out successful!');
+        // --- Pesan sukses ---
+        $message = 'Check-out successful!';
+        if ($overtimeMinutes > 0) {
+            $hours = floor($overtimeMinutes / 60);
+            $minutes = $overtimeMinutes % 60;
+            $message .= sprintf(' Overtime: %d hr %02d min.', $hours, $minutes);
+        }
+
+        return redirect()->route('my.attendance.index')->with('success', $message);
     }
 }

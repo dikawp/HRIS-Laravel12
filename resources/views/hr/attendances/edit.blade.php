@@ -3,13 +3,14 @@
 @section('content')
 
     <h2 class="my-6 text-2xl font-semibold text-gray-800 dark:text-gray-100">
-        Edit Attendance Record
+        Edit Attendance Record for {{ $attendance->employee->full_name }}
     </h2>
 
     <div class="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
         {{-- Error Alert --}}
         @if ($errors->any())
-            <div class="mb-6 p-4 rounded-lg bg-red-100 border border-red-300 text-red-800">
+            <div
+                class="mb-6 p-4 rounded-lg bg-red-100 border border-red-300 text-red-800 dark:bg-red-900/30 dark:border-red-600 dark:text-red-300">
                 <p class="font-semibold mb-1">Oops! Something went wrong:</p>
                 <ul class="list-disc pl-5 space-y-1 text-sm">
                     @foreach ($errors->all() as $error)
@@ -26,66 +27,81 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                {{-- Employee --}}
+                {{-- Employee (Readonly) --}}
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Employee
                     </label>
                     <input type="text" value="{{ $attendance->employee->full_name }}"
-                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 dark:text-gray-400 cursor-not-allowed"
+                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700/50 dark:text-gray-400 cursor-not-allowed"
                         readonly disabled>
                 </div>
 
                 {{-- Date --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Date
+                    <label for="date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Date <span class="text-red-500">*</span>
                     </label>
-                    <input type="date" name="date" value="{{ old('date', $attendance->date) }}"
+                    <input type="date" id="date" name="date"
+                        value="{{ old('date', $attendance->date ? $attendance->date->format('Y-m-d') : '') }}"
                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         required>
                 </div>
 
-                {{-- Status --}}
+                {{-- Status (Read Only) --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Status
+                        Status (Calculated)
                     </label>
-                    <select name="status"
-                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        required>
-                        <option value="Hadir" @selected(old('status', $attendance->status) == 'Hadir')>Hadir</option>
-                        <option value="Sakit" @selected(old('status', $attendance->status) == 'Sakit')>Sakit</option>
-                        <option value="Izin" @selected(old('status', $attendance->status) == 'Izin')>Izin</option>
-                        <option value="Cuti" @selected(old('status', $attendance->status) == 'Cuti')>Cuti</option>
-                        <option value="Alpa" @selected(old('status', $attendance->status) == 'Alpa')>Alpa</option>
-                    </select>
+                    <input type="text" value="{{ $attendance->status ?? 'N/A' }}"
+                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700/50 dark:text-gray-400 cursor-not-allowed
+                                  {{ $attendance->status == 'Late' ? 'text-red-600 dark:text-red-400 font-semibold' : '' }}"
+                        readonly disabled>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Status is calculated based on Check In time.
+                    </p>
                 </div>
 
                 {{-- Check In --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Check In
+                    <label for="check_in" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Check In Time
                     </label>
-                    <input type="time" name="check_in" value="{{ old('check_in', $attendance->check_in) }}"
+                    <input type="time" id="check_in" name="check_in"
+                        value="{{ old('check_in', $attendance->check_in ? $attendance->check_in->format('H:i') : '') }}"
+                        step="1"
                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
                 {{-- Check Out --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Check Out
+                    <label for="check_out" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Check Out Time
                     </label>
-                    <input type="time" name="check_out" value="{{ old('check_out', $attendance->check_out) }}"
+                    <input type="time" id="check_out" name="check_out"
+                        value="{{ old('check_out', $attendance->check_out ? $attendance->check_out->format('H:i') : '') }}"
+                        step="1"
                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
-                {{-- Notes --}}
+                {{-- Overtime (Read Only) --}}
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Overtime (Calculated)
+                    </label>
+                    <input type="text" value="{{ $attendance->formatted_overtime }}"
+                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700/50 dark:text-gray-400 cursor-not-allowed"
+                        readonly disabled>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Overtime is calculated if Check Out is more
+                        than 1 hour after schedule.</p>
+                </div>
+
+
+                {{-- Notes --}}
+                <div class="md:col-span-2">
+                    <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Notes (Optional)
                     </label>
-                    <textarea name="notes" rows="3"
+                    <textarea id="notes" name="notes" rows="3"
                         class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none">{{ old('notes', $attendance->notes) }}</textarea>
                 </div>
             </div>
