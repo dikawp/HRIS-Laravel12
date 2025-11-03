@@ -6,6 +6,7 @@
                 <th class="px-6 py-3 font-semibold">Status</th>
                 <th class="hidden px-6 py-3 font-semibold lg:table-cell">Date</th>
                 <th class="hidden px-6 py-3 font-semibold lg:table-cell">Reason</th>
+                <th class="hidden px-6 py-3 font-semibold lg:table-cell">Rejection Reason</th>
                 <th class="hidden px-6 py-3 font-semibold text-center lg:table-cell">Actions</th>
             </tr>
         </thead>
@@ -27,15 +28,41 @@
                             </svg>
                         </button>
                     </td>
-                    <td class="px-6 py-4"><span
-                            class="px-3 py-1 text-xs font-semibold rounded-full {{ $statusClasses }}">{{ $statusLabel }}</span>
+
+                    <td class="px-6 py-4">
+                        @php
+                            $statusText = '';
+                            $statusClass = '';
+                            switch ($request->status) {
+                                case 1:
+                                    $statusText = 'Approved';
+                                    $statusClass = 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+                                    break;
+                                case 2:
+                                    $statusText = 'Rejected';
+                                    $statusClass = 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+                                    break;
+                                default:
+                                    $statusText = 'Pending';
+                                    $statusClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+                                    break;
+                            }
+                        @endphp
+                        <span class="px-3 py-1 text-xs font-semibold rounded-full {{ $statusClass }}">
+                            {{ $statusText }}
+                        </span>
                     </td>
+
                     <td class="hidden px-6 py-4 whitespace-nowrap lg:table-cell">
                         {{ $request->start_date->format('d M Y') }} – {{ $request->end_date->format('d M Y') }}</td>
                     <td class="hidden px-6 py-4 lg:table-cell">{{ Str::limit($request->reason, 35) }}</td>
+
+                    <td class="hidden px-6 py-4 lg:table-cell">
+                        {{ $request->rejection_reason ?? '-' }}
+                    </td>
+
                     <td class="hidden px-6 py-4 text-center lg:table-cell">
-                        @if ($request->status == 0)
-                            {{-- Hanya tampil jika status Pending --}}
+                        @if ($request->status == 0) {{-- 0 = Pending --}}
                             <div class="flex items-center justify-center space-x-4">
                                 <a href="{{ route('my-leaves.edit', $request->id) }}"
                                     class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
@@ -55,7 +82,7 @@
 
                 {{-- Collapsible Details Row --}}
                 <tr id="details-{{ $request->id }}" class="hidden border-b dark:border-gray-700 lg:hidden">
-                    <td colspan="3" class="p-4 bg-gray-50 dark:bg-gray-800/50">
+                    <td colspan="6" class="p-4 bg-gray-50 dark:bg-gray-800/50">
                         <div class="grid grid-cols-1 gap-y-4">
                             <div>
                                 <span class="font-bold text-xs uppercase text-gray-500 dark:text-gray-400">Date</span>
@@ -66,16 +93,20 @@
                                 <span class="font-bold text-xs uppercase text-gray-500 dark:text-gray-400">Reason</span>
                                 <p class="text-gray-800 dark:text-gray-200">{{ $request->reason }}</p>
                             </div>
-                            @if ($request->status == 2 && $request->rejection_reason)
-                                <div class="pt-4 border-t dark:border-gray-600"><span
-                                        class="font-bold text-xs uppercase text-gray-500 dark:text-gray-400">Reason for
-                                        Rejection</span>
-                                    <p class="text-red-600 dark:text-red-400">{{ $request->rejection_reason }}</p>
+
+                            @if ($request->status == 2) {{-- 2 = Rejected --}}
+                                <div class="pt-4 border-t dark:border-gray-600">
+                                    <span class="font-bold text-xs uppercase text-gray-500 dark:text-gray-400">
+                                        Reason for Rejection
+                                    </span>
+                                    <p class="text-red-600 dark:text-red-400">
+                                        {{ $request->rejection_reason ?? '-' }}
+                                    </p>
                                 </div>
                             @endif
 
                             {{-- Actions for Mobile View --}}
-                            @if ($request->status == 0)
+                            @if ($request->status == 0) {{-- 0 = Pending --}}
                                 <div class="flex flex-col sm:col-span-2 pt-4 border-t dark:border-gray-600">
                                     <span
                                         class="font-bold text-xs uppercase text-gray-500 dark:text-gray-400">Actions</span>

@@ -28,17 +28,6 @@
                     </div>
                 @endif
 
-                <!-- Leave Type -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Leave Type</label>
-                    <select name="leave_type" required
-                        class="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="0" @selected(old('leave_type') == 0)>Sick Leave</option>
-                        <option value="1" @selected(old('leave_type') == 1)>Annual Leave</option>
-                        <option value="3" @selected(old('leave_type') == 3)>Other</option>
-                    </select>
-                </div>
-
                 <!-- Dates -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>

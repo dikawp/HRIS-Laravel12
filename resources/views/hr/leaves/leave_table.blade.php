@@ -33,11 +33,30 @@
                         <p class="text-xs text-gray-500 dark:text-gray-400">{{ $request->employee->position->name }}</p>
                     </td>
                     <td class="px-6 py-4">
-                        <span
-                            class="px-3 py-1 text-xs font-semibold rounded-full {{ $statusClasses }}">{{ $statusLabel }}</span>
+                        @php
+                            $statusText = '';
+                            $statusClass = '';
+                            switch ($request->status) {
+                                case 1:
+                                    $statusText = 'Approved';
+                                    $statusClass = 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+                                    break;
+                                case 2:
+                                    $statusText = 'Rejected';
+                                    $statusClass = 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+                                    break;
+                                default:
+                                    $statusText = 'Pending';
+                                    $statusClass =
+                                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+                                    break;
+                            }
+                        @endphp
+                        <span class="px-3 py-1 text-xs font-semibold rounded-full {{ $statusClass }}">
+                            {{ $statusText }}
+                        </span>
                     </td>
                     <td class="hidden px-6 py-4 lg:table-cell">{{ $request->employee->department->name }}</td>
-                    <td class="hidden px-6 py-4 lg:table-cell">{{ $leaveType }}</td>
                     <td class="hidden px-6 py-4 whitespace-nowrap lg:table-cell">
                         {{ $request->start_date->format('d M Y') }} – {{ $request->end_date->format('d M Y') }}</td>
                     <td class="hidden px-6 py-4 text-center lg:table-cell">

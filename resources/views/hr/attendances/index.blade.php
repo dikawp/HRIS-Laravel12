@@ -97,7 +97,7 @@
                                     @endif
                                 </div>
                                 <div class="flex-1">
-                                    <p class="text-lg font-bold text-gray-800 dark:text-gray-100 truncate">
+                                    <p class="text-md font-bold text-gray-800 dark:text-gray-100">
                                         {{ $selectedEmployee->full_name }}</p>
                                     <p class="text-sm text-gray-500 dark:text-gray-400">
                                         {{ $selectedEmployee->position->name }}</p>
@@ -122,6 +122,10 @@
                                         <div class="flex justify-between">
                                             <dt class="font-medium text-gray-600 dark:text-gray-400">Department</dt>
                                             <dd>{{ $selectedEmployee->department->name ?? 'N/A' }}</dd>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <dt class="font-medium text-gray-600 dark:text-gray-400">Work Hours</dt>
+                                            <dd>{{ $selectedEmployee->schedule_start_time . ' - ' . $selectedEmployee->schedule_end_time }}</dd>
                                         </div>
                                     </dl>
                                 </div>

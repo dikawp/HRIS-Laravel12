@@ -104,6 +104,8 @@ class LeaveController extends Controller
             return redirect()->route('leaves.index')->with('success', 'Leave request has been rejected.');
         }
 
+        dd($request->action);
+
         return redirect()->back()->with('error', 'Invalid action.');
     }
     /**
