@@ -52,14 +52,20 @@ class HolidayController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'description' => 'required|string|max:255',
             'date' => 'required|date|unique:holidays,date',
         ]);
 
-        Holiday::create($request->all());
-
-        return redirect()->route('holidays.index')->with('success', 'Holiday added successfully.');
+        try {
+            Holiday::create($validated);
+            toast('Holiday added successfully', 'success');
+            return redirect()->route('holidays.index')->with('success', 'Holiday added successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to add holiday: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -92,6 +98,7 @@ class HolidayController extends Controller
     public function destroy(Holiday $holiday)
     {
         $holiday->delete();
+        toast('Holiday deleted successfully', 'success');
         return redirect()->route('holidays.index')->with('success', 'Holiday deleted successfully.');
     }
 }

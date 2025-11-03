@@ -8,9 +8,11 @@ use App\Models\Employee;
 use App\Models\Position;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+
 
 class EmployeeController extends Controller
 {
@@ -23,7 +25,7 @@ class EmployeeController extends Controller
         $departmentId = $request->query('department_id');
         $positionId = $request->query('position_id');
 
-        // Query dasar employees dengan relasi user, department, position
+        // Query 
         $employees = Employee::with(['user', 'department', 'position'])
             ->whereHas('user', fn($q) => $q->where('role', 0))
             ->when($search, function ($q) use ($search) {
@@ -67,27 +69,46 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         $validated = $this->validateEmployee($request);
+        $photoPath = null;
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => 0, // default user
-        ]);
+        try {
+            DB::beginTransaction();
 
-        $photoPath = $this->handlePhotoUpload($request);
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role' => 0, // default user
+            ]);
 
-        Employee::create(array_merge(
-            $this->extractEmployeeData($validated),
-            [
-                'user_id' => $user->id,
-                'photo' => $photoPath,
-            ]
-        ));
+            $photoPath = $this->handlePhotoUpload($request);
 
-        return redirect()
-            ->route('employees.index')
-            ->with('success', 'Employee created successfully.');
+            Employee::create(array_merge(
+                $this->extractEmployeeData($validated),
+                [
+                    'user_id' => $user->id,
+                    'photo' => $photoPath,
+                ]
+            ));
+
+            DB::commit();
+
+            toast('Employee ' . $request->full_name . ' added successfully', 'success');
+
+            return redirect()
+                ->route('employees.index')
+                ->with('success', 'Employee created successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if ($photoPath && Storage::disk('public')->exists($photoPath)) {
+                Storage::disk('public')->delete($photoPath);
+            }
+
+            toast('Failed to add employee: ' . $e->getMessage(), 'error');
+
+            return redirect()->back()->withInput();
+        }
     }
 
     /**
@@ -159,6 +180,8 @@ class EmployeeController extends Controller
 
         // Hapus user (otomatis delete employee via cascade jika diatur)
         $employee->user->delete();
+
+        toast('Employee ' . $employee->full_name . ' deleted sucessfuly', 'success');
 
         return redirect()
             ->route('employees.index')

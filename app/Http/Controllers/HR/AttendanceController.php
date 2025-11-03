@@ -148,10 +148,10 @@ class AttendanceController extends Controller
                 'notes' => $validated['notes'],
             ]);
 
-            return redirect()
-                ->route('attendances.index', ['employee_id' => $validated['employee_id']])
-                ->with('success', 'Manual attendance record created successfully.');
+            toast('Attendance record created successfully', 'success');
+            return redirect()->route('attendances.index', ['employee_id' => $validated['employee_id']]);
         } catch (\Exception $e) {
+            toast('Failed to save attendance record', 'error');
             return redirect()->back()->withInput()->with('error', 'Failed to save attendance record: ' . $e->getMessage());
         }
     }
@@ -171,17 +171,23 @@ class AttendanceController extends Controller
      */
     public function update(Request $request, Attendance $attendance)
     {
-        $request->validate([
+        $validated = $request->validate([
             'date' => 'required|date',
             'status' => 'required|string',
             'check_in' => 'nullable|date_format:H:i',
             'check_out' => 'nullable|date_format:H:i|after_or_equal:check_in',
         ]);
 
-        $attendance->update($request->all());
-
-        return redirect()->route('attendances.index', ['employee_id' => $attendance->employee_id])
-            ->with('success', 'Attendance record updated successfully.');
+        try {
+            $attendance->update($validated);
+            toast('Attendance record updated successfully', 'success');
+            return redirect()->route('attendances.index', ['employee_id' => $attendance->employee_id])
+                ->with('success', 'Attendance record updated successfully.');
+        } catch (\Exception $e) {
+            toast('Failed to update attendance record', 'error');
+            return redirect()->back()
+                ->withInput();
+        }
     }
 
     /**
@@ -189,10 +195,15 @@ class AttendanceController extends Controller
      */
     public function destroy(Attendance $attendance)
     {
-        $employeeId = $attendance->employee_id;
-        $attendance->delete();
+        try {
+            $employeeId = $attendance->employee_id;
+            $attendance->delete();
 
-        return redirect()->route('attendances.index', ['employee_id' => $employeeId])
-            ->with('success', 'Attendance record deleted successfully.');
+            toast('Attendance record deleted successfully', 'success');
+            return redirect()->route('attendances.index', ['employee_id' => $employeeId]);
+        } catch (\Exception $e) {
+            toast('Failed to delete attendance record', 'error');
+            return redirect()->back();
+        }
     }
 }

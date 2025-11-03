@@ -79,34 +79,42 @@ class LeaveController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $leaveRequest = LeaveRequest::findOrFail($id);
+        try {
+            $leaveRequest = LeaveRequest::findOrFail($id);
 
-        if ($request->action == 'approve') {
-            $leaveRequest->update([
-                'status' => 1,
-                'approved_by' => Auth::id(),
-                'approved_at' => now(),
-            ]);
-            return redirect()->route('leaves.index')->with('success', 'Leave request has been approved.');
+            if ($request->action == 'approve') {
+                $leaveRequest->update([
+                    'status' => 1,
+                    'approved_by' => Auth::id(),
+                    'approved_at' => now(),
+                ]);
+
+                toast('Leave request has been approved.', 'success');
+                return redirect()->route('leaves.index')->with('success', 'Leave request has been approved.');
+            }
+
+            if ($request->action == 'reject') {
+                $request->validate([
+                    'rejection_reason' => 'required_without:no_reason|string|max:255',
+                ]);
+
+                $leaveRequest->update([
+                    'status' => 2,
+                    'approved_by' => Auth::id(),
+                    'approved_at' => now(),
+                    'rejection_reason' => $request->no_reason ? null : $request->rejection_reason,
+                ]);
+
+                toast('Leave request has been rejected.', 'success');
+                return redirect()->route('leaves.index')->with('success', 'Leave request has been rejected.');
+            }
+
+            toast('Invalid action.', 'error');
+            return redirect()->back()->with('error', 'Invalid action.');
+        } catch (\Exception $e) {
+            toast('Failed to update leave request: ' . $e->getMessage(), 'error');
+            return redirect()->back()->with('error', 'An error occurred while processing the request.');
         }
-
-        if ($request->action == 'reject') {
-            $request->validate([
-                'rejection_reason' => 'required_without:no_reason|string|max:255',
-            ]);
-
-            $leaveRequest->update([
-                'status' => 2,
-                'approved_by' => Auth::id(),
-                'approved_at' => now(),
-                'rejection_reason' => $request->no_reason ? null : $request->rejection_reason,
-            ]);
-            return redirect()->route('leaves.index')->with('success', 'Leave request has been rejected.');
-        }
-
-        dd($request->action);
-
-        return redirect()->back()->with('error', 'Invalid action.');
     }
     /**
      * Remove the specified resource from storage.

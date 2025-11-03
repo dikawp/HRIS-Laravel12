@@ -47,7 +47,7 @@ class AttendanceMonitorController extends Controller
 
         // Hitung total karyawan, hadir hari ini, dan tidak hadir hari ini
         $totalEmployees = Employee::count();
-        $presentToday = Attendance::whereDate('date', $today)->count();
+        $presentToday = Attendance::whereRaw('DATE(date) = ?', [$today->toDateString()])->count();
         $absentToday = $totalEmployees - $presentToday;
 
         $employees = Employee::with([

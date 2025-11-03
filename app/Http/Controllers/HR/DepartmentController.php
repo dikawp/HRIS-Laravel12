@@ -7,6 +7,7 @@ use App\Models\Department;
 use App\Models\Position;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use RealRashid\SweetAlert\Facades\Alert;
 
 class DepartmentController extends Controller
 {
@@ -77,11 +78,11 @@ class DepartmentController extends Controller
             }
 
             DB::commit();
-
+            toast('Department '.$request->name.' added sucessfuly','success');
             return redirect()->route('departments.index')->with('success', 'Department and positions created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-
+            toast('Failed to create department. Error: ' . $e->getMessage(),'error');
             return back()->with('error', 'Failed to create department. Please try again. Error: ' . $e->getMessage())->withInput();
         }
     }
@@ -146,9 +147,11 @@ class DepartmentController extends Controller
             }
 
             DB::commit();
+            toast('Department '.$request->name.' updated sucessfuly','success');
             return redirect()->route('departments.index')->with('success', 'Department and positions updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
+            alert()->error('Error', 'Cannot update departmen, there are employees associated with the deleted position.');
             return back()->with('error', 'Failed to update department. Error: ' . $e->getMessage())->withInput();
         }
     }
@@ -161,12 +164,12 @@ class DepartmentController extends Controller
         $department = Department::findOrFail($id);
 
         if ($department->employees()->exists() || $department->positions()->exists()) {
-            dd($department->employees()->exists(), $department->positions()->exists());
-            return back()->with('error', 'Cannot delete department. It is still associated with employees or positions.');
+            alert()->error('Error', 'Cannot delete department. It is still associated with employees or positions.');
+            return back();
         }
 
         $department->delete();
-
+        toast('Department '.$department->name.' deleted sucessfuly','success');
         return redirect()->route('departments.index')->with('success', 'Department deleted successfully.');
     }
 

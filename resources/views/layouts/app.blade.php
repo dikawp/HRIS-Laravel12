@@ -48,7 +48,8 @@
                             @yield('header')
                         </h2>
                     @endif
-
+                    
+                    @include('sweetalert::alert')
                     <!-- Main Content -->
                     @yield('content')
                 </div>

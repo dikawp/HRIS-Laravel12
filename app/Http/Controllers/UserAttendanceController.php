@@ -18,7 +18,7 @@ class UserAttendanceController extends Controller
 
         // Cari data absensi hari ini
         $todayAttendance = Attendance::where('employee_id', $employee->id)
-            ->whereDate('date', today())
+            ->where('date', today()->toDateString())
             ->first();
 
         // Ambil riwayat absensi bulan ini
@@ -43,7 +43,7 @@ class UserAttendanceController extends Controller
         $employee = $user->employee;
 
         $alreadyCheckedIn = Attendance::where('employee_id', $employee->id)
-            ->whereDate('date', today())
+            ->where('date', today()->toDateString())
             ->exists();
         if ($alreadyCheckedIn) {
             return redirect()->route('my.attendance.index')->with('error', 'You have already checked in today.');
@@ -87,7 +87,7 @@ class UserAttendanceController extends Controller
 
         // Cari record absensi hari ini yang belum check-out
         $attendance = Attendance::where('employee_id', $employee->id)
-            ->whereDate('date', today())
+            ->where('date', today()->toDateString())
             ->whereNull('check_out')
             ->first();
 
