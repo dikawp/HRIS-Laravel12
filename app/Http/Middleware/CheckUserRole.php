@@ -16,9 +16,7 @@ class CheckUserRole
      */
     public function handle(Request $request, Closure $next, string $role): Response
     {
-        // Check if user is authenticated and if their role matches the required role
-        if (!Auth::check() || Auth::user()->role !== $role) {
-            // Redirect to a default route if the role does not match
+        if (!Auth::check() || (int) Auth::user()->role !== (int) $role) {
             return redirect('/dashboard');
         }
 
